@@ -27,6 +27,8 @@
 -- inicial fuera del script; FK compuestas venta/seguimiento -> cotizacion;
 -- orden_produccion asociada al ítem del pedido (id_detalle_pedido).
 -- =====================================================================
+SET GLOBAL log_bin_trust_function_creators = 1;
+SET @hash_gerente = '$2a$12$e8Y5t1hKGy9c9Z4GZ6f3ee8C8G6A7X8M8K8P8Z8Q8Y8X8W8V8U8T.';
 SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE DATABASE IF NOT EXISTS dlucia_sistema
   DEFAULT CHARACTER SET utf8mb4 DEFAULT COLLATE utf8mb4_unicode_ci;
