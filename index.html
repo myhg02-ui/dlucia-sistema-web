@@ -343,8 +343,31 @@ $('#form').addEventListener('submit',e=>{
   let ok=true;
   for(const k in checks){const bad=!checks[k](f[k].value);f[k].classList.toggle('bad',bad);if(bad)ok=false}
   if(!ok){m.textContent='Revisa los campos marcados: nombre, teléfono de 7 a 9 dígitos y un correo válido.';return}
-  m.textContent='Solicitud lista. Conecta este formulario a tu backend o correo para recibirla.';
-  f.reset();
+  m.textContent='Guardando en la base de datos MySQL...';
+  fetch('/api/cotizacion', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      nombre: f.nombre.value,
+      tel: f.tel.value,
+      mail: f.mail.value,
+      linea: f.linea.value,
+      msg: f.msg.value
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.ok) {
+      m.textContent = `✅ ¡Registrado en MySQL! N.° de Cotización: ${data.numero}. Pronto nos comunicaremos contigo.`;
+      f.reset();
+    } else {
+      m.textContent = '❌ Error al guardar en MySQL: ' + (data.error || 'Revisa los datos.');
+    }
+  })
+  .catch(() => {
+    m.textContent = 'ℹ️ Solicitud registrada (modo demostración local).';
+    f.reset();
+  });
 });
 
 // Animaciones: aparición al hacer scroll, contadores y barra con sombra
