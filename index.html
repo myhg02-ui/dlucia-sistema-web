@@ -77,11 +77,19 @@ footer{padding:28px 24px;text-align:center;font-size:.9rem;color:#55625d}footer 
 .filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:28px}
 .filters button{border:1.5px solid var(--ink);background:none;padding:8px 20px;border-radius:99px;font:700 .95rem "Hanken Grotesk",sans-serif;cursor:pointer;transition:.2s}
 .filters button:hover,.filters button.on{background:var(--ink);color:#fff}
-.cat .item{border-top:0;padding:0;background:#fff;border-radius:var(--r);overflow:hidden;border:1px solid var(--line);display:flex;flex-direction:column;animation:pop .45s ease both}
-.cat{gap:24px}.item h3,.item p,.item .link{margin-left:22px;margin-right:22px}.item p{flex:1;font-size:.97rem}.item h3{margin-top:18px}
-.fig{background:linear-gradient(160deg,#dfe4dc,#c9d1c7);padding:18px 24px;--f:var(--velvet)}.fig svg{width:100%;height:auto;display:block;transition:transform .5s}
-.item:hover .fig svg{transform:scale(1.07) translateY(-3px)}.item:nth-child(2) .fig{--f:#25506b}.item:nth-child(3) .fig{--f:#6e2a3a}.item:nth-child(5) .fig{--f:#7d8582}.item:nth-child(6) .fig{--f:#b58a2e}
-.link{background:none;border:0;font:700 1rem "Hanken Grotesk",sans-serif;color:var(--velvet);cursor:pointer;text-align:left;padding:0 0 22px;margin-top:14px}.link:hover{color:var(--brass)}
+.cat .item{border-top:0;padding:0;background:#fff;border-radius:12px;overflow:hidden;border:1px solid var(--line);display:flex;flex-direction:column;animation:pop .45s ease both;box-shadow:0 2px 8px rgba(23,32,29,.04);transition:transform .3s ease,box-shadow .3s ease}
+.cat .item:hover{transform:translateY(-5px);box-shadow:0 14px 28px rgba(23,32,29,.1)}
+.cat{gap:24px}
+.item-body{padding:20px 22px 14px;display:flex;flex-direction:column;flex:1}
+.item-body h3{font:600 1.25rem Fraunces,serif;color:var(--ink);margin:0 0 8px}
+.item-body p{color:#5a6762;font-size:.94rem;line-height:1.55;margin:0;flex:1}
+.item-foot{display:flex;align-items:center;justify-content:space-between;padding:14px 22px 18px;border-top:1px solid #edf1ec;gap:12px;margin-top:auto;background:#fafbfa}
+.item-price{display:flex;flex-direction:column}
+.item-price .price-lbl{font-size:.72rem;text-transform:uppercase;letter-spacing:.6px;color:#7d8582;font-weight:700;line-height:1;margin-bottom:3px}
+.item-price .price-val{font:700 1.25rem Fraunces,serif;color:var(--velvet);line-height:1.1}
+.btn-cotizar{background:var(--velvet);color:#fff;border:0;padding:9px 18px;border-radius:99px;font:700 .9rem "Hanken Grotesk",sans-serif;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .2s ease;margin-left:auto}
+.btn-cotizar:hover{background:var(--brass);color:#17201d;transform:translateY(-2px);box-shadow:0 4px 12px rgba(176,141,87,.35)}
+.link{background:none;border:0;font:700 1rem "Hanken Grotesk",sans-serif;color:var(--velvet);cursor:pointer;text-align:left;padding:0}
 .item.hide{display:none}@keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
 .stage{background:linear-gradient(160deg,#dfe4dc,#c4cdc1);border-radius:var(--r);padding:36px;transition:.3s}.stage svg{width:100%;height:auto;display:block;filter:drop-shadow(0 18px 14px rgba(0,0,0,.2))}
 .sw{display:flex;gap:14px;margin:24px 0 10px;flex-wrap:wrap}.sw button{width:46px;height:46px;border-radius:50%;background:var(--c);border:3px solid var(--bg);box-shadow:0 0 0 1.5px var(--line);cursor:pointer;transition:transform .2s}
@@ -96,8 +104,13 @@ footer{padding:28px 24px;text-align:center;font-size:.9rem;color:#55625d}footer 
 .pr{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:var(--r);padding:28px;transition:transform .3s}.pr:hover{transform:translateY(-6px)}
 .grid3 .pr{border-top:1px solid rgba(255,255,255,.15)}.pc{display:block;font:600 3rem Fraunces,serif;color:var(--brass);line-height:1}.pr h3{margin:12px 0 6px}.pr p{color:#c5d0cb;margin-bottom:14px}
 .cd{display:block;font-weight:700;font-size:.9rem;margin-bottom:18px;color:#eef2ef}.pr .btn{background:var(--brass);color:#17201d!important}
-.fig{overflow:hidden}.fig:has(img){padding:0}.fig img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;transition:transform .6s}.item:hover .fig img{transform:scale(1.06)}
-.item .pr-p{flex:0!important;font-weight:700;color:var(--velvet);margin-top:8px}
+.fig{background:linear-gradient(160deg,#dfe4dc,#c9d1c7);padding:24px 28px;--f:var(--velvet);overflow:hidden;position:relative}
+.fig:has(img){padding:0}
+.fig img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;transition:transform .6s}
+.item:hover .fig img{transform:scale(1.06)}
+.fig svg{width:100%;height:auto;display:block;transition:transform .5s}
+.item:hover .fig svg{transform:scale(1.06) translateY(-2px)}
+.item:nth-child(2) .fig{--f:#25506b}.item:nth-child(3) .fig{--f:#6e2a3a}.item:nth-child(5) .fig{--f:#7d8582}.item:nth-child(6) .fig{--f:#b58a2e}
 details{border-bottom:1px solid var(--line);padding:18px 0;max-width:820px}summary{cursor:pointer;font:600 1.1rem Fraunces,serif;list-style:none;display:flex;justify-content:space-between;gap:16px}
 summary::-webkit-details-marker{display:none}summary::after{content:"+";color:var(--brass);font-size:1.6rem;line-height:1;transition:transform .3s}details[open] summary::after{transform:rotate(45deg)}details p{margin-top:10px}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;scroll-behavior:auto}.rv{opacity:1;transform:none}}
@@ -343,7 +356,7 @@ $('#form').addEventListener('submit',e=>{
   let ok=true;
   for(const k in checks){const bad=!checks[k](f[k].value);f[k].classList.toggle('bad',bad);if(bad)ok=false}
   if(!ok){m.textContent='Revisa los campos marcados: nombre, teléfono de 7 a 9 dígitos y un correo válido.';return}
-  m.textContent='Guardando en la base de datos MySQL...';
+  m.textContent='Enviando solicitud...';
   fetch('/api/cotizacion', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -358,10 +371,10 @@ $('#form').addEventListener('submit',e=>{
   .then(res => res.json())
   .then(data => {
     if (data.ok) {
-      m.textContent = `✅ ¡Registrado en MySQL! N.° de Cotización: ${data.numero}. Pronto nos comunicaremos contigo.`;
+      m.textContent = `✅ ¡Solicitud enviada con éxito! N.° de Cotización: ${data.numero}. Pronto nos comunicaremos contigo.`;
       f.reset();
     } else {
-      m.textContent = '❌ Error al guardar en MySQL: ' + (data.error || 'Revisa los datos.');
+      m.textContent = '❌ Error al enviar solicitud: ' + (data.error || 'Revisa los datos.');
     }
   })
   .catch(() => {
@@ -425,14 +438,27 @@ function renderCatalogo(prods, mostrarPrecios){
     const desc = p.descripcion || p.d || 'Mobiliario de alta calidad fabricado en taller D\'Lucia.';
     const pr = p.precio_venta || p.p;
     const img = p.imagen || p.img;
+    const fmtPr = pr && Number(pr) > 0 ? Number(pr).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '';
     return `<article class="item" data-cat="${esc(cat)}">
       <div class="fig">
         ${img ? `<img src="${img}" alt="${esc(nom)}" loading="lazy">` : `<svg viewBox="0 0 200 130"><use href="#${sy(nom)}"/></svg>`}
       </div>
-      <h3>${esc(nom)}</h3>
-      <p>${esc(desc)}</p>
-      ${mostrarPrecios && pr && Number(pr) > 0 ? `<p class="pr-p" style="color:var(--b);font-weight:700;margin:6px 0">Desde S/ ${Number(pr).toFixed(2)}</p>` : ''}
-      <button class="link" data-q="${esc(nom.toLowerCase())}">Cotizar</button>
+      <div class="item-body">
+        <h3>${esc(nom)}</h3>
+        <p>${esc(desc)}</p>
+      </div>
+      <div class="item-foot">
+        ${mostrarPrecios && fmtPr ? `
+          <div class="item-price">
+            <span class="price-lbl">Desde</span>
+            <b class="price-val">S/ ${fmtPr}</b>
+          </div>
+        ` : ''}
+        <button class="btn-cotizar" data-q="${esc(nom.toLowerCase())}">
+          <span>Cotizar</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
     </article>`;
   }).join('');
   applyCurrentFilter();
@@ -476,7 +502,7 @@ document.querySelectorAll('#filters button').forEach(b=>b.addEventListener('clic
 }));
 
 $('#cat').addEventListener('click', e=>{
-  const b = e.target.closest('.link');
+  const b = e.target.closest('.btn-cotizar, .link');
   if(b && b.dataset.q){
     quote('Hola, quiero cotizar ' + b.dataset.q + '.');
   }

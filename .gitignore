@@ -1,4 +1,6 @@
-# Archivos comprimidos y temporales
+node_modules/
+*.docx
+*.pdf
 *.zip
 extracted/
 .DS_Store

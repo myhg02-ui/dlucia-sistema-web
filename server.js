@@ -7,8 +7,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '20mb' }));
+app.use(express.urlencoded({ limit: '20mb', extended: true }));
 app.use(express.static(path.join(__dirname)));
 
 // Conexión a la base de datos MySQL local (dlucia_sistema)
@@ -156,13 +156,65 @@ app.post('/api/productos/:id/toggle', async (req, res) => {
   }
 });
 
-// Actualizar foto de producto en MySQL
+// Actualizar o eliminar foto de producto
 app.post('/api/productos/:id/foto', async (req, res) => {
   const { id } = req.params;
   const { imagen } = req.body;
   try {
-    await pool.query('UPDATE producto SET imagen = ? WHERE id_producto = ? OR codigo = ?', [imagen, id, id]);
-    res.json({ ok: true, mensaje: 'Foto actualizada en MySQL' });
+    await pool.query('UPDATE producto SET imagen = ? WHERE id_producto = ? OR codigo = ?', [imagen || null, id, id]);
+    res.json({ ok: true, mensaje: 'Foto actualizada exitosamente' });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+app.delete('/api/productos/:id/foto', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query('UPDATE producto SET imagen = NULL WHERE id_producto = ? OR codigo = ?', [id, id]);
+    res.json({ ok: true, mensaje: 'Foto eliminada exitosamente' });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+// Actualizar precio de producto en la lista de precios vigente
+app.post('/api/productos/:id/precio', async (req, res) => {
+  const { id } = req.params;
+  const { precio } = req.body;
+  const numPrecio = Number(precio);
+  if (isNaN(numPrecio) || numPrecio <= 0) {
+    return res.status(400).json({ ok: false, error: 'Ingresa un precio válido mayor a 0.' });
+  }
+  try {
+    const [[lp]] = await pool.query("SELECT id_lista_precios FROM lista_precios WHERE estado = 'VIGENTE' LIMIT 1");
+    const idLista = lp ? lp.id_lista_precios : 1;
+
+    const [[prod]] = await pool.query("SELECT id_producto FROM producto WHERE id_producto = ? OR codigo = ?", [id, id]);
+    if (!prod) return res.status(404).json({ ok: false, error: 'Producto no encontrado' });
+
+    await pool.query(
+      `INSERT INTO detalle_lista_precios (id_lista_precios, id_producto, precio_venta)
+       VALUES (?, ?, ?)
+       ON DUPLICATE KEY UPDATE precio_venta = VALUES(precio_venta)`,
+      [idLista, prod.id_producto, numPrecio]
+    );
+
+    res.json({ ok: true, precio: numPrecio, mensaje: 'Precio actualizado exitosamente' });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+app.put('/api/productos/:id', async (req, res) => {
+  const { id } = req.params;
+  const { nombre } = req.body;
+  if (!nombre || !nombre.trim()) {
+    return res.status(400).json({ ok: false, error: 'El nombre no puede estar vacío.' });
+  }
+  try {
+    await pool.query('UPDATE producto SET nombre = ? WHERE id_producto = ? OR codigo = ?', [nombre.trim(), id, id]);
+    res.json({ ok: true, mensaje: 'Nombre actualizado exitosamente', nombre: nombre.trim() });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
   }
@@ -514,6 +566,44 @@ app.post('/api/pedidos/:id/avanzar', async (req, res) => {
 
     await conn.commit();
     res.json({ ok: true, mensaje: `Pedido actualizado a ${estadoNuevo}`, estado: estadoNuevo });
+  } catch (error) {
+    await conn.rollback();
+    res.status(500).json({ ok: false, error: error.message });
+  } finally {
+    conn.release();
+  }
+});
+
+// Retroceder estado de pedido (por equivocación o corrección)
+app.post('/api/pedidos/:id/retroceder', async (req, res) => {
+  const { id } = req.params;
+  const ESTADOS = ['REGISTRADO', 'EN_FABRICACION', 'LISTO_PARA_ENTREGA', 'ENTREGADO'];
+
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    const [rows] = await conn.query('SELECT id_pedido, estado FROM pedido WHERE id_pedido = ? OR numero = ? LIMIT 1', [id, id]);
+    if (rows.length === 0) return res.status(404).json({ ok: false, error: 'Pedido no encontrado' });
+
+    const p = rows[0];
+    const idxActual = ESTADOS.indexOf(p.estado);
+    if (idxActual <= 0) {
+      return res.status(400).json({ ok: false, error: 'El pedido ya está en el estado inicial (Registrado).' });
+    }
+
+    const estadoNuevo = ESTADOS[idxActual - 1];
+
+    await conn.query('UPDATE pedido SET estado = ? WHERE id_pedido = ?', [estadoNuevo, p.id_pedido]);
+
+    await conn.query(
+      `INSERT INTO historial_estado_pedido (id_pedido, id_usuario, estado_anterior, estado_nuevo, observacion)
+       VALUES (?, 1, ?, ?, 'Corrección de estado desde panel administrativo')`,
+      [p.id_pedido, p.estado, estadoNuevo]
+    );
+
+    await conn.commit();
+    res.json({ ok: true, mensaje: `Pedido regresado a ${estadoNuevo}`, estado: estadoNuevo });
   } catch (error) {
     await conn.rollback();
     res.status(500).json({ ok: false, error: error.message });

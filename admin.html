@@ -35,7 +35,14 @@ tr.new{animation:flash 1.6s}@keyframes flash{from{background:#f3e6cc}to{backgrou
 .toast{position:fixed;right:20px;bottom:20px;background:var(--ink);color:#fff;padding:12px 18px;border-radius:var(--r);transform:translateY(90px);opacity:0;transition:.35s;z-index:9}.toast.show{transform:none;opacity:1}.toast.bad{background:var(--bad)}
 @media(max-width:820px){#app{grid-template-columns:1fr}aside{position:static;height:auto;flex-direction:row;flex-wrap:wrap}aside h2{width:100%;padding-bottom:6px}.sp{display:none}main{padding:18px}.two{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-.th{width:56px;height:42px;object-fit:cover;border-radius:6px;display:block}.th.ph{background:#dfe4dc}.hint{color:#5a6762;font-size:.9rem;margin-bottom:12px}
+.th{width:56px;height:42px;object-fit:cover;border-radius:6px;display:block;cursor:pointer;transition:opacity .2s}.th:hover{opacity:.85}.th.ph{background:#dfe4dc}.hint{color:#5a6762;font-size:.9rem;margin-bottom:12px}
+.th-wrap{position:relative;display:inline-block;width:56px;height:42px;vertical-align:middle}
+.th.empty{background:#edf2ec;border:1.5px dashed #b7c2b5;display:flex;align-items:center;justify-content:center;color:#496156;font-size:.75rem;font-weight:700;text-decoration:none}
+.th.empty:hover{background:#dfe8dd;border-color:var(--v);color:var(--v)}
+.th-del{position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--bad);color:#fff;border:1.5px solid #fff;cursor:pointer;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;box-shadow:0 1px 4px rgba(0,0,0,.3);transition:transform .15s}
+.th-del:hover{transform:scale(1.2)}
+[data-en],[data-eni],[data-epi]{cursor:pointer;transition:color .15s}
+[data-en]:hover,[data-eni]:hover,[data-epi]:hover{color:var(--v);text-decoration:underline}
 </style></head><body>
 <div id="login"><form id="lf"><h1>D'Lucia · Administrador</h1><small>Ingresa con tu usuario y contraseña.</small>
 <input id="u" placeholder="Usuario" autocomplete="username" required><input id="p" type="password" placeholder="Contraseña" autocomplete="current-password" required>
@@ -96,38 +103,38 @@ const tag=(t,c)=>`<span class="tg ${c||''}">${t}</span>`;
 const R={
 dash(){
   const low=D.prod.filter(p=>p.s<=p.m),act=D.ped.filter(o=>o.st<3).length,cnt=ST.map((s,i)=>D.ped.filter(o=>o.st===i).length),mx=Math.max(1,...cnt);
-  return `<div class="top"><h1>Resumen (MySQL)</h1></div><div class="kpis">
+  return `<div class="top"><h1>Panel de control</h1></div><div class="kpis">
 <div class="k"><b id="kpi_prod" data-n="${D.prod.length}">0</b>Productos</div><div class="k ${low.length?'al':''}"><b id="kpi_low" data-n="${low.length}">0</b>Con stock bajo</div>
 <div class="k"><b id="kpi_act" data-n="${act}">0</b>Pedidos activos</div><div class="k"><b id="kpi_cli" data-n="${D.cli.length}">0</b>Clientes</div></div>
 <div class="two"><div class="box"><h3>Pedidos por estado</h3>${ST.map((s,i)=>`<div class="bar"><span>${s}</span><i data-w="${cnt[i]/mx*100}"></i><b>${cnt[i]}</b></div>`).join('')}</div>
 <div class="box"><h3>Alertas de reposición</h3>${low.length?low.map(p=>`<p>${tag('Stock bajo','bad')} ${esc(p.n)}: ${p.s} (mínimo ${p.m})</p>`).join(''):'<p>Sin alertas. Todo el stock está sobre su mínimo.</p>'}</div></div>
-<div class="box"><h3>Últimos movimientos</h3>${D.mov.length?D.mov.slice(-5).reverse().map(m=>`<p>${m.f} · ${esc(m.c)} · ${m.t} ${m.q}</p>`).join(''):'<p>Movimientos registrados en tiempo real con MySQL.</p>'}</div>`},
+<div class="box"><h3>Últimos movimientos</h3>${D.mov.length?D.mov.slice(-5).reverse().map(m=>`<p>${m.f} · ${esc(m.c)} · ${m.t} ${m.q}</p>`).join(''):'<p>Sin movimientos recientes registrados.</p>'}</div>`},
 inv(){
-  return `<div class="top"><h1>Inventario (MySQL)</h1><input id="q" placeholder="Buscar producto o código"></div>
-<div class="box"><h3>Nuevo producto (Cumple RF-01, RF-02 y R-03)</h3>
+  return `<div class="top"><h1>Inventario y productos</h1><input id="q" placeholder="Buscar producto o código"></div>
+<div class="box"><h3>Registrar nuevo producto</h3>
 <div class="row">
   <input id="c" placeholder="Código (ej. SOF-002)">
   <input id="n" placeholder="Nombre comercial">
   <select id="ln" title="Línea de negocio"><option value="MUEBLES">Muebles</option><option value="MATERIALES_TAPICERIA">Materiales Tapicería</option></select>
   <input id="cat" placeholder="Categoría (Salas, Telas...)">
-  <select id="u" title="Unidad de medida (ENUM)"><option value="UNIDAD">UNIDAD</option><option value="METRO">METRO</option><option value="PLANCHA">PLANCHA</option><option value="KILOGRAMO">KILOGRAMO</option><option value="JUEGO">JUEGO</option></select>
+  <select id="u" title="Unidad de medida"><option value="UNIDAD">UNIDAD</option><option value="METRO">METRO</option><option value="PLANCHA">PLANCHA</option><option value="KILOGRAMO">KILOGRAMO</option><option value="JUEGO">JUEGO</option></select>
   <input id="p" type="number" min="0" step="0.01" placeholder="Precio venta S/">
   <input id="m" type="number" min="0" placeholder="Stock mínimo">
-  <button class="btn" id="add">Guardar en MySQL</button>
+  <button class="btn" id="add">Guardar producto</button>
 </div></div>
-<div class="box tw"><table><thead><tr><th>Código</th><th>Producto</th><th>Categoría</th><th>Stock</th><th>Mínimo</th><th>Precio VIGENTE</th><th>Estado</th><th>Movimiento</th></tr></thead><tbody id="tb"></tbody></table></div>`},
+<div class="box tw"><table><thead><tr><th>Código</th><th>Producto</th><th>Categoría</th><th>Stock</th><th>Mínimo</th><th>Precio vigente</th><th>Estado</th><th>Movimiento</th></tr></thead><tbody id="tb"></tbody></table></div>`},
 ped(){
-  return `<div class="top"><h1>Pedidos (MySQL)</h1></div><div class="box"><h3>Nuevo pedido (RF-13: Venta -> Pedido)</h3><div class="row"><select id="pc">${D.cli.map(c=>`<option value="${esc(c.n)}">${esc(c.n)}</option>`).join('')}</select><input id="pd" placeholder="Descripción (medidas, tela, acabados)"><input id="pf" type="date"><button class="btn" id="add">Registrar</button></div></div>
+  return `<div class="top"><h1>Gestión de pedidos</h1></div><div class="box"><h3>Registrar nuevo pedido</h3><div class="row"><select id="pc">${D.cli.map(c=>`<option value="${esc(c.n)}">${esc(c.n)}</option>`).join('')}</select><input id="pd" placeholder="Descripción (medidas, tela, acabados)"><input id="pf" type="date"><button class="btn" id="add">Registrar</button></div></div>
 <div class="box tw"><table><thead><tr><th>N.º</th><th>Cliente</th><th>Detalle</th><th>Entrega</th><th>Estado</th><th>Acción</th></tr></thead><tbody id="tb_ped"></tbody></table></div>`},
 cli(){
-  return `<div class="top"><h1>Clientes (MySQL)</h1></div><div class="box"><h3>Nuevo registro (Cumple RF-38 a RF-40 y R-09/R-10)</h3>
+  return `<div class="top"><h1>Directorio de clientes</h1></div><div class="box"><h3>Registrar nuevo cliente</h3>
 <div class="row">
   <input id="d" placeholder="DNI (8 dígitos) o RUC (11 dígitos)" inputmode="numeric">
   <input id="n" placeholder="Nombre completo o razón social">
   <input id="t" placeholder="Teléfono" inputmode="numeric">
   <input id="em" placeholder="Correo (opcional)" type="email">
-  <select id="k"><option value="POTENCIAL">Potencial cliente (P-09)</option><option value="CLIENTE">Cliente formal</option></select>
-  <button class="btn" id="add">Guardar en MySQL</button>
+  <select id="k"><option value="POTENCIAL">Potencial cliente</option><option value="CLIENTE">Cliente formal</option></select>
+  <button class="btn" id="add">Guardar cliente</button>
 </div></div>
 <div class="box tw"><table><thead><tr><th>Documento</th><th>Nombre</th><th>Teléfono</th><th>Correo</th><th>Clasificación</th></tr></thead><tbody id="tb_cli"></tbody></table></div>`}
 };
@@ -137,11 +144,56 @@ async function rows(){
     const res = await fetch('/api/productos');
     const json = await res.json();
     if(json.ok && json.data) {
-      D.prod = json.data.map(p=>({c:p.codigo, n:p.nombre, cat:p.categoria, u:p.unidad_medida, p:p.precio_venta, s:Number(p.stock_actual), m:Number(p.stock_minimo)}));
+      D.prod = json.data.map(p=>({id:p.id_producto, c:p.codigo, n:p.nombre, cat:p.categoria, u:p.unidad_medida, p:p.precio_venta, s:Number(p.stock_actual), m:Number(p.stock_minimo)}));
       save();
     }
   } catch(e) {}
-  $('#tb').innerHTML=D.prod.filter(p=>(p.c+p.n).toLowerCase().includes(q)).map(p=>`<tr data-k="${p.c}"><td>${esc(p.c)}</td><td>${esc(p.n)}</td><td>${p.cat}</td><td><b>${p.s}</b> ${esc(p.u)}</td><td>${p.m}</td><td>S/ ${(+p.p).toFixed(2)}</td><td>${p.s<=p.m?tag('Stock bajo','bad'):tag('Disponible')}</td><td><button class="btn s" data-a="in" data-i="${p.c}">+ Entrada</button> <button class="btn s o" data-a="out" data-i="${p.c}">− Salida</button></td></tr>`).join('')
+  $('#tb').innerHTML=D.prod.filter(p=>(p.c+p.n).toLowerCase().includes(q)).map(p=>`<tr data-k="${p.c}">
+    <td>${esc(p.c)}</td>
+    <td><strong data-eni="${p.id||p.c}" data-n="${esc(p.n)}" title="Clic para corregir nombre">${esc(p.n)}</strong></td>
+    <td>${p.cat}</td>
+    <td><b>${p.s}</b> ${esc(p.u)}</td>
+    <td>${p.m}</td>
+    <td><strong data-epi="${p.id||p.c}" data-n="${esc(p.n)}" data-pr="${p.p}" title="Clic para cambiar precio">S/ ${(+p.p).toFixed(2)}</strong></td>
+    <td>${p.s<=p.m?tag('Stock bajo','bad'):tag('Disponible')}</td>
+    <td><button class="btn s" data-a="in" data-i="${p.c}">+ Entrada</button> <button class="btn s o" data-a="out" data-i="${p.c}">− Salida</button></td>
+  </tr>`).join('');
+  document.querySelectorAll('[data-epi]').forEach(b=>b.onclick=async()=>{
+    const id=b.dataset.epi, nombre=b.dataset.n, actual=b.dataset.pr||'';
+    const nuevo=prompt(`Cambiar precio de venta de "${nombre}" (en S/):`, actual);
+    if(nuevo===null) return;
+    const num=parseFloat(nuevo);
+    if(isNaN(num)||num<=0) return toast('Ingresa un precio válido mayor a 0.', 1);
+    try {
+      const res=await fetch('/api/productos/'+id+'/precio', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ precio: num })
+      });
+      const d=await res.json();
+      if(d.ok){
+        toast(`Precio de "${nombre}" actualizado a S/ ${num.toFixed(2)}`);
+        rows();
+      } else toast(d.error||'Error al actualizar', 1);
+    }catch(e){toast('Error de conexión', 1);}
+  });
+  document.querySelectorAll('[data-eni]').forEach(b=>b.onclick=async()=>{
+    const id=b.dataset.eni, actual=b.dataset.n;
+    const nuevo=prompt(`Corregir nombre del producto:`, actual);
+    if(!nuevo||!nuevo.trim()||nuevo.trim()===actual) return;
+    try {
+      const res=await fetch('/api/productos/'+id, {
+        method:'PUT',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ nombre: nuevo.trim() })
+      });
+      const d=await res.json();
+      if(d.ok){
+        toast(`Nombre actualizado a "${nuevo.trim()}"`);
+        rows();
+      } else toast(d.error||'Error al actualizar nombre', 1);
+    }catch(e){toast('Error de conexión', 1);}
+  });
 }
 async function loadCli(){
   try {
@@ -156,33 +208,86 @@ async function loadCli(){
   if(tb) tb.innerHTML = D.cli.map(c=>`<tr data-k="${c.d}"><td>${c.d}</td><td>${esc(c.n)}</td><td>${esc(c.t)}</td><td>${esc(c.em||'-')}</td><td>${tag(c.k,c.k==='CLIENTE'?'':'w')}</td></tr>`).join('');
 }
 async function loadPed(){
+  const mapSt = s => {
+    if(!s) return 0;
+    const u = String(s).toUpperCase().replace(/\s+/g, '_');
+    if(u.includes('FABRIC')) return 1;
+    if(u.includes('LISTO')) return 2;
+    if(u === 'ENTREGADO') return 3;
+    return 0;
+  };
   try {
     const res = await fetch('/api/pedidos');
     const json = await res.json();
     if(json.ok && json.data) {
-      D.ped = json.data.map(p=>({id:p.numero, c:p.cliente, d:p.detalle, f:(p.fecha_comprometida||'').slice(0,10), st:ST.indexOf(p.estado)>=0?ST.indexOf(p.estado):0}));
+      D.ped = json.data.map(p=>({id:p.numero, c:p.cliente, d:p.detalle, f:(p.fecha_comprometida||'').slice(0,10), st:mapSt(p.estado)}));
       save();
     }
   } catch(e) {}
   const tb = $('#tb_ped');
-  if(tb) tb.innerHTML = D.ped.map(o=>`<tr data-k="${o.id}"><td>${o.id}</td><td>${esc(o.c)}</td><td>${esc(o.d)}</td><td>${o.f||'-'}</td><td>${tag(ST[o.st]||'Registrado',o.st==3?'':'w')}</td><td>${o.st<3?`<button class="btn s" data-a="adv" data-i="${o.id}">Avanzar</button> `:''}${o.st<2?`<button class="btn s d" data-a="del" data-i="${o.id}">Anular</button>`:''}</td></tr>`).join('');
+  if(tb) {
+    if(D.ped.length === 0) {
+      tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:22px;color:#7d8582">No hay pedidos registrados aún. Ingresa los datos arriba y presiona "Registrar".</td></tr>';
+    } else {
+      tb.innerHTML = D.ped.map(o=>`<tr data-k="${o.id}">
+        <td>${o.id}</td>
+        <td>${esc(o.c)}</td>
+        <td>${esc(o.d)}</td>
+        <td>${o.f||'-'}</td>
+        <td>${tag(ST[o.st]||'Registrado',o.st===3?'':(o.st===2?'ok':'w'))}</td>
+        <td>
+          ${o.st > 0 ? `<button class="btn s o" data-a="ret" data-i="${o.id}" title="Regresar al estado anterior">↶ Regresar</button> ` : ''}
+          ${o.st < 3 ? `<button class="btn s" data-a="adv" data-i="${o.id}" title="Avanzar al siguiente estado">Avanzar</button> ` : ''}
+          ${o.st < 2 ? `<button class="btn s d" data-a="del" data-i="${o.id}">Anular</button>` : ''}
+        </td>
+      </tr>`).join('');
+    }
+  }
   bindPedActions();
 }
 function bindPedActions(){
   document.querySelectorAll('#tb_ped [data-a]').forEach(b=>b.onclick=async()=>{
-    const o=D.ped.find(x=>x.id===b.dataset.i);
-    if(b.dataset.a==='adv'){
+    const id = b.dataset.i;
+    const action = b.dataset.a;
+    const nombresBonitos = {
+      'REGISTRADO': 'Registrado',
+      'EN_FABRICACION': 'En fabricación',
+      'LISTO_PARA_ENTREGA': 'Listo para entrega',
+      'ENTREGADO': 'Entregado'
+    };
+    if(action==='adv'){
       try {
-        await fetch('/api/pedidos/'+encodeURIComponent(o.id)+'/avanzar', {method:'POST'});
-      } catch(e){}
-      o.st = Math.min(3, (o.st||0) + 1);
-      toast('Estado actualizado en MySQL: '+(ST[o.st]||'Avanzado'));
+        const res = await fetch('/api/pedidos/'+encodeURIComponent(id)+'/avanzar', {method:'POST'});
+        const d = await res.json();
+        if(d.ok){
+          toast('Estado avanzado a: ' + (nombresBonitos[d.estado] || d.estado));
+        } else {
+          toast(d.error || 'No se puede avanzar más', 1);
+        }
+      } catch(e){
+        toast('Error de conexión', 1);
+      }
+      await loadPed();
+    } else if(action==='ret'){
+      try {
+        const res = await fetch('/api/pedidos/'+encodeURIComponent(id)+'/retroceder', {method:'POST'});
+        const d = await res.json();
+        if(d.ok){
+          toast('Estado corregido a: ' + (nombresBonitos[d.estado] || d.estado));
+        } else {
+          toast(d.error || 'No se puede regresar más', 1);
+        }
+      } catch(e){
+        toast('Error de conexión', 1);
+      }
+      await loadPed();
     } else {
-      if(!confirm('¿Anular el pedido '+o.id+'?'))return;
-      D.ped=D.ped.filter(x=>x!==o);
+      if(!confirm('¿Anular el pedido '+id+'?')) return;
+      D.ped=D.ped.filter(x=>x.id!==id);
+      save();
+      await loadPed();
       toast('Pedido anulado.');
     }
-    save();go('ped',o.id);
   });
 }
 async function loadKpis(){
@@ -293,8 +398,8 @@ if(!S.get(SK))saveW();
 const img2url=(f,cb)=>{const r=new FileReader();r.onload=()=>{const i=new Image();i.onload=()=>{const k=Math.min(1,900/i.width),c=document.createElement('canvas');c.width=i.width*k;c.height=i.height*k;c.getContext('2d').drawImage(i,0,0,c.width,c.height);cb(c.toDataURL('image/jpeg',.78))};i.onerror=()=>toast('No se pudo leer la imagen.',1);i.src=r.result};r.readAsDataURL(f)};
 const CT={salas:'Salas',descanso:'Descanso',medida:'A medida',telas:'Telas',espumas:'Espumas'},cl=c=>String(c||'').split(' ').map(x=>CT[x.toLowerCase()]||x).join(', ');
 let webProds = [];
-R.web=()=>`<div class="top"><h1>Catálogo web (MySQL)</h1><a class="btn o" href="index.html" target="_blank">Ver página pública</a></div>
-<p class="hint">Los productos y su visibilidad se guardan en MySQL (Regla P-05). Al desactivar "Visible", el producto se oculta en tiempo real para todos los navegadores.</p>
+R.web=()=>`<div class="top"><h1>Catálogo web</h1><a class="btn o" href="index.html" target="_blank">Ver página pública</a></div>
+<p class="hint">Gestiona los productos disponibles para exhibición y venta en el catálogo web. Los cambios se actualizan en tiempo real.</p>
 <div class="box" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;background:#f8faf8;border-left:4px solid var(--b)">
   <div>
     <h3 style="margin:0">Mostrar precios en la web pública</h3>
@@ -306,9 +411,9 @@ R.web=()=>`<div class="top"><h1>Catálogo web (MySQL)</h1><a class="btn o" href=
   </label>
 </div>
 <div class="box"><h3>Foto de portada</h3><div class="row"><input type="file" id="hf" accept="image/*">${W.hero?`<img class="th" src="${W.hero}"><button class="btn s d" id="hx">Quitar</button>`:''}</div></div>
-<div class="box"><h3>Nuevo producto para la web</h3><div class="row"><input id="wn" placeholder="Nombre comercial"><select id="wc"><option value="Salas">Salas</option><option value="Descanso">Descanso</option><option value="A medida">A medida</option><option value="Telas">Telas</option><option value="Espumas">Espumas</option></select><input id="wd" placeholder="Descripción para el catálogo"><input id="wp" type="number" min="0" placeholder="Precio desde S/ (opcional)"><input type="file" id="wf" accept="image/*"><button class="btn" id="addWeb">Publicar en MySQL</button></div></div>
+<div class="box"><h3>Nuevo producto para la web</h3><div class="row"><input id="wn" placeholder="Nombre comercial"><select id="wc"><option value="Salas">Salas</option><option value="Descanso">Descanso</option><option value="A medida">A medida</option><option value="Telas">Telas</option><option value="Espumas">Espumas</option></select><input id="wd" placeholder="Descripción para el catálogo"><input id="wp" type="number" min="0" placeholder="Precio desde S/ (opcional)"><input type="file" id="wf" accept="image/*"><button class="btn" id="addWeb">Publicar producto</button></div></div>
 <input type="file" id="rf" accept="image/*" hidden>
-<div class="box tw"><table><thead><tr><th>Foto</th><th>Producto</th><th>Categoría</th><th>Precio</th><th>Página</th><th>Acciones</th></tr></thead><tbody id="tb_web"></tbody></table></div>`;
+<div class="box tw"><table><thead><tr><th>Foto</th><th>Producto</th><th>Categoría</th><th>Precio</th><th style="text-align:center">Visible en web</th></tr></thead><tbody id="tb_web"></tbody></table></div>`;
 
 async function loadWebProds(){
   try {
@@ -335,7 +440,7 @@ async function loadWebProds(){
               body: JSON.stringify({ mostrar_precios: chk.checked })
             });
             lbl.textContent = chk.checked ? 'Activado (Muestra precios)' : 'Desactivado (Solo cotización)';
-            toast(chk.checked ? 'Precios activados en la web pública (MySQL).' : 'Precios desactivados en la web pública (MySQL).');
+            toast(chk.checked ? 'Precios activados en la web pública.' : 'Precios desactivados en la web pública.');
           } catch(err) {
             toast('Error al guardar configuración', 1);
           }
@@ -346,15 +451,22 @@ async function loadWebProds(){
   const tb = $('#tb_web');
   if(tb) {
     tb.innerHTML = webProds.map(p=>`<tr>
-      <td>${p.imagen ? `<img class="th" src="${p.imagen}" alt="">` : '<span class="th ph"></span>'}</td>
-      <td><strong>${esc(p.nombre)}</strong><br><small style="color:#5a6762">${esc(p.codigo)}</small></td>
-      <td>${esc(cl(p.categoria))}</td>
-      <td>${p.precio_venta && Number(p.precio_venta) > 0 ? 'S/ ' + Number(p.precio_venta).toFixed(2) : '-'}</td>
-      <td><label style="cursor:pointer;font-weight:600"><input type="checkbox" data-t="${p.id_producto}" ${p.activo ? 'checked' : ''}> Visible</label></td>
       <td>
-        <button class="btn s o" data-ph="${p.id_producto}">Foto</button>
-        <button class="btn s d" data-rm="${p.id_producto}">Desactivar</button>
+        ${p.imagen ? `
+          <div class="th-wrap">
+            <img class="th" src="${p.imagen}" alt="" data-ph="${p.id_producto}" title="Clic para cambiar foto">
+            <button class="th-del" data-df="${p.id_producto}" data-n="${esc(p.nombre)}" title="Quitar foto">✕</button>
+          </div>
+        ` : `
+          <div class="th-wrap">
+            <span class="th empty" data-ph="${p.id_producto}" title="Clic para subir foto">+ Foto</span>
+          </div>
+        `}
       </td>
+      <td><strong data-en="${p.id_producto}" data-n="${esc(p.nombre)}" title="Clic para corregir nombre">${esc(p.nombre)}</strong><br><small style="color:#5a6762">${esc(p.codigo)}</small></td>
+      <td>${esc(cl(p.categoria))}</td>
+      <td><strong>${p.precio_venta && Number(p.precio_venta) > 0 ? 'S/ ' + Number(p.precio_venta).toFixed(2) : 'Sin precio'}</strong></td>
+      <td style="text-align:center"><label style="cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:6px"><input type="checkbox" data-t="${p.id_producto}" ${p.activo ? 'checked' : ''}> ${p.activo ? '<span style="color:var(--b)">Visible</span>' : '<span style="color:#888">Oculto</span>'}</label></td>
     </tr>`).join('');
     bindWebActions();
   }
@@ -367,7 +479,7 @@ function bindWebActions(){
       const res = await fetch('/api/productos/' + id + '/toggle', { method: 'POST' });
       const json = await res.json();
       if(json.ok) {
-        toast(c.checked ? 'Producto visible en la web (MySQL P-05).' : 'Producto oculto de la web (MySQL P-05).');
+        toast(c.checked ? 'Producto visible en el catálogo.' : 'Producto oculto del catálogo.');
       } else {
         toast('Error al actualizar visibilidad', 1);
       }
@@ -376,6 +488,47 @@ function bindWebActions(){
     }
     loadWebProds();
   });
+
+  // Corregir nombre de producto
+  document.querySelectorAll('[data-en]').forEach(b=>b.onclick=async()=>{
+    const id=b.dataset.en, actual=b.dataset.n;
+    const nuevo=prompt(`Corregir nombre del producto:`, actual);
+    if(!nuevo||!nuevo.trim()||nuevo.trim()===actual) return;
+    try {
+      const res=await fetch('/api/productos/'+id, {
+        method:'PUT',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ nombre: nuevo.trim() })
+      });
+      const d=await res.json();
+      if(d.ok){
+        toast(`Nombre actualizado a "${nuevo.trim()}"`);
+        loadWebProds();
+      } else toast(d.error||'Error al actualizar nombre', 1);
+    }catch(e){toast('Error de conexión', 1);}
+  });
+
+
+  // Eliminar / quitar foto
+  document.querySelectorAll('[data-df]').forEach(b=>b.onclick=async e=>{
+    e.stopPropagation();
+    const id = b.dataset.df;
+    const nombre = b.dataset.n;
+    if(!confirm(`¿Eliminar la foto de "${nombre}" y volver al dibujo original?`)) return;
+    try {
+      const res = await fetch('/api/productos/' + id + '/foto', { method: 'DELETE' });
+      const d = await res.json();
+      if(d.ok) {
+        toast(`Foto de "${nombre}" eliminada.`);
+        loadWebProds();
+      } else {
+        toast(d.error || 'Error al eliminar foto', 1);
+      }
+    } catch(err) {
+      toast('Error de conexión', 1);
+    }
+  });
+
   let rid;
   document.querySelectorAll('[data-ph]').forEach(b=>b.onclick=()=>{
     rid = b.dataset.ph;
@@ -391,7 +544,7 @@ function bindWebActions(){
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ imagen: u })
           });
-          toast('Foto guardada en MySQL.');
+          toast('Foto actualizada con éxito.');
           loadWebProds();
         } catch(err) {
           toast('Error al guardar foto', 1);
@@ -399,20 +552,12 @@ function bindWebActions(){
       });
     }
   };
-  document.querySelectorAll('[data-rm]').forEach(b=>b.onclick=async()=>{
-    if(!confirm('¿Desactivar este producto de la venta en MySQL (Regla P-05)?')) return;
-    try {
-      await fetch('/api/productos/' + b.dataset.rm, { method: 'DELETE' });
-      toast('Producto desactivado en MySQL (Regla P-05).');
-    } catch(e) {}
-    loadWebProds();
-  });
 }
 R.promo=()=>{
   const hoy=new Date().toISOString().slice(0,10);
-  return `<div class="top"><h1>Promociones (MySQL)</h1><a class="btn o" href="index.html" target="_blank">Ver página pública</a></div>
-<p class="hint">Las promociones se guardan en MySQL y se sincronizan en todos los navegadores.</p>
-<div class="box"><h3>Nueva promoción</h3><div class="row"><input id="pt" placeholder="Título"><input id="pd2" placeholder="Descripción"><input id="pp" type="number" min="1" max="90" placeholder="% de descuento"><input id="pu" type="date" title="Vigente hasta"><button class="btn" id="add">Guardar en MySQL</button></div></div>
+  return `<div class="top"><h1>Promociones comerciales</h1><a class="btn o" href="index.html" target="_blank">Ver página pública</a></div>
+<p class="hint">Configura ofertas y descuentos especiales visibles en la página principal.</p>
+<div class="box"><h3>Nueva promoción</h3><div class="row"><input id="pt" placeholder="Título"><input id="pd2" placeholder="Descripción"><input id="pp" type="number" min="1" max="90" placeholder="% de descuento"><input id="pu" type="date" title="Vigente hasta"><button class="btn" id="add">Publicar promoción</button></div></div>
 <div class="box tw"><table><thead><tr><th>Promoción</th><th>Descuento</th><th>Hasta</th><th>Estado</th><th>Activa</th><th></th></tr></thead><tbody id="tb_promo"></tbody></table></div>`};
 async function loadPromos(){
   const hoy=new Date().toISOString().slice(0,10);
@@ -434,15 +579,15 @@ function bindPromoButtons(){
   document.querySelectorAll('[data-pa]').forEach(c=>c.onchange=async()=>{
     try {
       await fetch('/api/promociones/'+c.dataset.pa+'/toggle', {method:'POST'});
-      toast('Estado actualizado en MySQL.');
+      toast('Estado de promoción actualizado.');
     } catch(e) {}
     loadPromos();
   });
   document.querySelectorAll('[data-pr]').forEach(b=>b.onclick=async()=>{
-    if(!confirm('¿Eliminar esta promoción de MySQL?')) return;
+    if(!confirm('¿Eliminar esta promoción?')) return;
     try {
       await fetch('/api/promociones/'+b.dataset.pr, {method:'DELETE'});
-      toast('Promoción eliminada de MySQL.');
+      toast('Promoción eliminada con éxito.');
     } catch(e) {}
     loadPromos();
   });
@@ -465,7 +610,7 @@ function bindX(v){
         });
         const dres = await res.json();
         if(dres.ok) {
-          toast('Producto guardado en MySQL con éxito.');
+          toast('Producto publicado con éxito.');
           $('#wn').value=''; $('#wd').value=''; $('#wp').value=''; if($('#wf'))$('#wf').value='';
           loadWebProds();
         } else {
@@ -491,7 +636,7 @@ function bindX(v){
         headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ titulo: t, descripcion: d, descuento: pc, fecha_limite: u })
       });
-      toast('Promoción guardada en MySQL.');
+      toast('Promoción publicada con éxito.');
     } catch(e) {}
     loadPromos();
   };
