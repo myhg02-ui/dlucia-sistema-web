@@ -67,6 +67,36 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
+// Helper para configuración del sistema en MySQL
+async function getConfig() {
+  try {
+    const [rows] = await pool.query('SELECT clave, valor FROM configuracion_web');
+    const cfg = {};
+    rows.forEach(r => { cfg[r.clave] = r.valor === '1' || r.valor === 'true'; });
+    return cfg;
+  } catch (e) {
+    return { mostrar_precios: false };
+  }
+}
+
+app.get('/api/configuracion', async (req, res) => {
+  const cfg = await getConfig();
+  res.json({ ok: true, config: cfg });
+});
+
+app.post('/api/configuracion', async (req, res) => {
+  const { mostrar_precios } = req.body;
+  try {
+    await pool.query(
+      "INSERT INTO configuracion_web (clave, valor) VALUES ('mostrar_precios', ?) ON DUPLICATE KEY UPDATE valor = VALUES(valor)",
+      [mostrar_precios ? '1' : '0']
+    );
+    res.json({ ok: true, mostrar_precios: !!mostrar_precios, mensaje: 'Configuración guardada en MySQL' });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
 // ==========================================
 // 2. PRODUCTOS E INVENTARIO (RF-01 a RF-06)
 // ==========================================
@@ -85,7 +115,8 @@ app.get('/api/productos', async (req, res) => {
       ORDER BY p.id_producto ASC
     `;
     const [productos] = await pool.query(query);
-    res.json({ ok: true, data: productos });
+    const cfg = await getConfig();
+    res.json({ ok: true, data: productos, config: cfg });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
   }
@@ -106,7 +137,8 @@ app.get('/api/productos/todos', async (req, res) => {
       ORDER BY p.id_producto ASC
     `;
     const [productos] = await pool.query(query);
-    res.json({ ok: true, data: productos });
+    const cfg = await getConfig();
+    res.json({ ok: true, data: productos, config: cfg });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
   }

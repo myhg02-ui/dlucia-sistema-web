@@ -295,6 +295,16 @@ const CT={salas:'Salas',descanso:'Descanso',medida:'A medida',telas:'Telas',espu
 let webProds = [];
 R.web=()=>`<div class="top"><h1>Catálogo web (MySQL)</h1><a class="btn o" href="index.html" target="_blank">Ver página pública</a></div>
 <p class="hint">Los productos y su visibilidad se guardan en MySQL (Regla P-05). Al desactivar "Visible", el producto se oculta en tiempo real para todos los navegadores.</p>
+<div class="box" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;background:#f8faf8;border-left:4px solid var(--b)">
+  <div>
+    <h3 style="margin:0">Mostrar precios en la web pública</h3>
+    <small style="color:#5a6762">Si está activado, la web muestra "Desde S/ X.XX". Si está desactivado, los clientes solo ven el botón "Cotizar" para pedir presupuesto a medida.</small>
+  </div>
+  <label style="cursor:pointer;font-weight:700;display:flex;align-items:center;gap:8px">
+    <input type="checkbox" id="cfg_precios" style="width:20px;height:20px;cursor:pointer">
+    <span id="cfg_precios_label">Cargando...</span>
+  </label>
+</div>
 <div class="box"><h3>Foto de portada</h3><div class="row"><input type="file" id="hf" accept="image/*">${W.hero?`<img class="th" src="${W.hero}"><button class="btn s d" id="hx">Quitar</button>`:''}</div></div>
 <div class="box"><h3>Nuevo producto para la web</h3><div class="row"><input id="wn" placeholder="Nombre comercial"><select id="wc"><option value="Salas">Salas</option><option value="Descanso">Descanso</option><option value="A medida">A medida</option><option value="Telas">Telas</option><option value="Espumas">Espumas</option></select><input id="wd" placeholder="Descripción para el catálogo"><input id="wp" type="number" min="0" placeholder="Precio desde S/ (opcional)"><input type="file" id="wf" accept="image/*"><button class="btn" id="addWeb">Publicar en MySQL</button></div></div>
 <input type="file" id="rf" accept="image/*" hidden>
@@ -308,6 +318,31 @@ async function loadWebProds(){
       webProds = json.data;
     }
   } catch(e) {}
+  // Cargar y vincular switch de mostrar precios
+  try {
+    const resCfg = await fetch('/api/configuracion');
+    const jsonCfg = await resCfg.json();
+    if(jsonCfg.ok && jsonCfg.config) {
+      const chk = $('#cfg_precios'), lbl = $('#cfg_precios_label');
+      if(chk && lbl) {
+        chk.checked = !!jsonCfg.config.mostrar_precios;
+        lbl.textContent = chk.checked ? 'Activado (Muestra precios)' : 'Desactivado (Solo cotización)';
+        chk.onchange = async () => {
+          try {
+            await fetch('/api/configuracion', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({ mostrar_precios: chk.checked })
+            });
+            lbl.textContent = chk.checked ? 'Activado (Muestra precios)' : 'Desactivado (Solo cotización)';
+            toast(chk.checked ? 'Precios activados en la web pública (MySQL).' : 'Precios desactivados en la web pública (MySQL).');
+          } catch(err) {
+            toast('Error al guardar configuración', 1);
+          }
+        };
+      }
+    }
+  } catch(err){}
   const tb = $('#tb_web');
   if(tb) {
     tb.innerHTML = webProds.map(p=>`<tr>

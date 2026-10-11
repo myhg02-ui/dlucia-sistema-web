@@ -415,7 +415,7 @@ function applyCurrentFilter(){
   });
 }
 
-function renderCatalogo(prods){
+function renderCatalogo(prods, mostrarPrecios){
   const catEl = $('#cat');
   if(!catEl || !prods || !prods.length) return;
   const sy=n=>/sill/i.test(n)?'chair':/cama/i.test(n)?'bed':/colch/i.test(n)?'matt':/cabec/i.test(n)?'head':/medida|personal/i.test(n)?'cust':'sofa';
@@ -431,6 +431,7 @@ function renderCatalogo(prods){
       </div>
       <h3>${esc(nom)}</h3>
       <p>${esc(desc)}</p>
+      ${mostrarPrecios && pr && Number(pr) > 0 ? `<p class="pr-p" style="color:var(--b);font-weight:700;margin:6px 0">Desde S/ ${Number(pr).toFixed(2)}</p>` : ''}
       <button class="link" data-q="${esc(nom.toLowerCase())}">Cotizar</button>
     </article>`;
   }).join('');
@@ -443,12 +444,13 @@ function loadCatalogoFromMySQL(){
     .then(r=>r.json())
     .then(json=>{
       if(json.ok && json.data && json.data.length > 0) {
-        renderCatalogo(json.data);
+        const mostrarPrecios = json.config && json.config.mostrar_precios;
+        renderCatalogo(json.data, mostrarPrecios);
       }
     })
     .catch(()=>{
       let site=null;try{site=JSON.parse(localStorage.getItem('dl_site'))}catch(e){}
-      if(site && site.prod) renderCatalogo(site.prod.filter(p=>p.on));
+      if(site && site.prod) renderCatalogo(site.prod.filter(p=>p.on), false);
     });
 }
 loadCatalogoFromMySQL();
