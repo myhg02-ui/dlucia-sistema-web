@@ -431,7 +431,6 @@ function renderCatalogo(prods){
       </div>
       <h3>${esc(nom)}</h3>
       <p>${esc(desc)}</p>
-      ${pr && Number(pr) > 0 ? `<p class="pr-p">Desde S/ ${Number(pr).toFixed(2)}</p>` : ''}
       <button class="link" data-q="${esc(nom.toLowerCase())}">Cotizar</button>
     </article>`;
   }).join('');
