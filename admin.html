@@ -291,13 +291,88 @@ let W=JSON.parse(S.get(SK)||'null')||def();
 const saveW=()=>{try{localStorage.setItem(SK,JSON.stringify(W));return 1}catch(e){toast('No hay espacio para guardar. Usa fotos más livianas o elimina alguna.',1);return 0}};
 if(!S.get(SK))saveW();
 const img2url=(f,cb)=>{const r=new FileReader();r.onload=()=>{const i=new Image();i.onload=()=>{const k=Math.min(1,900/i.width),c=document.createElement('canvas');c.width=i.width*k;c.height=i.height*k;c.getContext('2d').drawImage(i,0,0,c.width,c.height);cb(c.toDataURL('image/jpeg',.78))};i.onerror=()=>toast('No se pudo leer la imagen.',1);i.src=r.result};r.readAsDataURL(f)};
-const CT={salas:'Salas',descanso:'Descanso',medida:'A medida'},cl=c=>c.split(' ').map(x=>CT[x]||x).join(', ');
-R.web=()=>`<div class="top"><h1>Catálogo web</h1><a class="btn o" href="index.html" target="_blank">Ver página pública</a></div>
-<p class="hint">Lo que publiques aquí aparece en la página pública (en este mismo navegador). Las fotos se reducen automáticamente.</p>
+const CT={salas:'Salas',descanso:'Descanso',medida:'A medida',telas:'Telas',espumas:'Espumas'},cl=c=>String(c||'').split(' ').map(x=>CT[x.toLowerCase()]||x).join(', ');
+let webProds = [];
+R.web=()=>`<div class="top"><h1>Catálogo web (MySQL)</h1><a class="btn o" href="index.html" target="_blank">Ver página pública</a></div>
+<p class="hint">Los productos y su visibilidad se guardan en MySQL (Regla P-05). Al desactivar "Visible", el producto se oculta en tiempo real para todos los navegadores.</p>
 <div class="box"><h3>Foto de portada</h3><div class="row"><input type="file" id="hf" accept="image/*">${W.hero?`<img class="th" src="${W.hero}"><button class="btn s d" id="hx">Quitar</button>`:''}</div></div>
-<div class="box"><h3>Nuevo producto</h3><div class="row"><input id="wn" placeholder="Nombre"><select id="wc"><option value="salas">Salas</option><option value="descanso">Descanso</option><option value="medida">A medida</option></select><input id="wd" placeholder="Descripción"><input id="wp" type="number" min="0" placeholder="Precio desde S/ (opcional)"><input type="file" id="wf" accept="image/*"><button class="btn" id="add">Publicar</button></div></div>
+<div class="box"><h3>Nuevo producto para la web</h3><div class="row"><input id="wn" placeholder="Nombre comercial"><select id="wc"><option value="Salas">Salas</option><option value="Descanso">Descanso</option><option value="A medida">A medida</option><option value="Telas">Telas</option><option value="Espumas">Espumas</option></select><input id="wd" placeholder="Descripción para el catálogo"><input id="wp" type="number" min="0" placeholder="Precio desde S/ (opcional)"><input type="file" id="wf" accept="image/*"><button class="btn" id="addWeb">Publicar en MySQL</button></div></div>
 <input type="file" id="rf" accept="image/*" hidden>
-<div class="box tw"><table><thead><tr><th>Foto</th><th>Producto</th><th>Categoría</th><th>Precio</th><th>Página</th><th>Acciones</th></tr></thead><tbody>${W.prod.map(p=>`<tr><td>${p.img?`<img class="th" src="${p.img}" alt="">`:'<span class="th ph"></span>'}</td><td>${esc(p.n)}</td><td>${cl(p.cat)}</td><td>${p.p?'S/ '+(+p.p).toFixed(2):'-'}</td><td><label><input type="checkbox" data-t="${p.id}" ${p.on?'checked':''}> Visible</label></td><td><button class="btn s o" data-ph="${p.id}">Foto</button> <button class="btn s d" data-rm="${p.id}">Eliminar</button></td></tr>`).join('')}</tbody></table></div>`;
+<div class="box tw"><table><thead><tr><th>Foto</th><th>Producto</th><th>Categoría</th><th>Precio</th><th>Página</th><th>Acciones</th></tr></thead><tbody id="tb_web"></tbody></table></div>`;
+
+async function loadWebProds(){
+  try {
+    const res = await fetch('/api/productos/todos');
+    const json = await res.json();
+    if(json.ok && json.data) {
+      webProds = json.data;
+    }
+  } catch(e) {}
+  const tb = $('#tb_web');
+  if(tb) {
+    tb.innerHTML = webProds.map(p=>`<tr>
+      <td>${p.imagen ? `<img class="th" src="${p.imagen}" alt="">` : '<span class="th ph"></span>'}</td>
+      <td><strong>${esc(p.nombre)}</strong><br><small style="color:#5a6762">${esc(p.codigo)}</small></td>
+      <td>${esc(cl(p.categoria))}</td>
+      <td>${p.precio_venta && Number(p.precio_venta) > 0 ? 'S/ ' + Number(p.precio_venta).toFixed(2) : '-'}</td>
+      <td><label style="cursor:pointer;font-weight:600"><input type="checkbox" data-t="${p.id_producto}" ${p.activo ? 'checked' : ''}> Visible</label></td>
+      <td>
+        <button class="btn s o" data-ph="${p.id_producto}">Foto</button>
+        <button class="btn s d" data-rm="${p.id_producto}">Desactivar</button>
+      </td>
+    </tr>`).join('');
+    bindWebActions();
+  }
+}
+
+function bindWebActions(){
+  document.querySelectorAll('[data-t]').forEach(c=>c.onchange=async()=>{
+    const id = c.dataset.t;
+    try {
+      const res = await fetch('/api/productos/' + id + '/toggle', { method: 'POST' });
+      const json = await res.json();
+      if(json.ok) {
+        toast(c.checked ? 'Producto visible en la web (MySQL P-05).' : 'Producto oculto de la web (MySQL P-05).');
+      } else {
+        toast('Error al actualizar visibilidad', 1);
+      }
+    } catch(e) {
+      toast('Error de conexión', 1);
+    }
+    loadWebProds();
+  });
+  let rid;
+  document.querySelectorAll('[data-ph]').forEach(b=>b.onclick=()=>{
+    rid = b.dataset.ph;
+    $('#rf').click();
+  });
+  $('#rf').onchange = e => {
+    const f = e.target.files[0];
+    if(f && rid) {
+      img2url(f, async u => {
+        try {
+          await fetch('/api/productos/' + rid + '/foto', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ imagen: u })
+          });
+          toast('Foto guardada en MySQL.');
+          loadWebProds();
+        } catch(err) {
+          toast('Error al guardar foto', 1);
+        }
+      });
+    }
+  };
+  document.querySelectorAll('[data-rm]').forEach(b=>b.onclick=async()=>{
+    if(!confirm('¿Desactivar este producto de la venta en MySQL (Regla P-05)?')) return;
+    try {
+      await fetch('/api/productos/' + b.dataset.rm, { method: 'DELETE' });
+      toast('Producto desactivado en MySQL (Regla P-05).');
+    } catch(e) {}
+    loadWebProds();
+  });
+}
 R.promo=()=>{
   const hoy=new Date().toISOString().slice(0,10);
   return `<div class="top"><h1>Promociones (MySQL)</h1><a class="btn o" href="index.html" target="_blank">Ver página pública</a></div>
@@ -339,13 +414,35 @@ function bindPromoButtons(){
 }
 function bindX(v){
  if(v==='web'){
-  $('#hf').onchange=e=>{const f=e.target.files[0];f&&img2url(f,u=>{W.hero=u;saveW()&&(go('web'),toast('Portada actualizada en la página.'))})};
+  loadWebProds();
+  $('#hf').onchange=e=>{const f=e.target.files[0];f&&img2url(f,u=>{W.hero=u;saveW()&&(go('web'),toast('Portada actualizada.'))})};
   $('#hx')&&($('#hx').onclick=()=>{W.hero='';saveW();go('web')});
-  $('#add').onclick=()=>{const n=$('#wn').value.trim(),d=$('#wd').value.trim();if(!n||!d)return toast('Ingresa nombre y descripción.',1);const f=$('#wf').files[0],mk=img=>{W.prod.push({id:Date.now(),n,cat:$('#wc').value,d,p:$('#wp').value,img,on:1});saveW()&&(go('web'),toast('Producto publicado en la página.'))};f?img2url(f,mk):mk('')};
-  let rid;$('#rf').onchange=e=>{const f=e.target.files[0],p=W.prod.find(x=>x.id==rid);f&&p&&img2url(f,u=>{p.img=u;saveW()&&(go('web'),toast('Foto actualizada.'))})};
-  document.querySelectorAll('[data-ph]').forEach(b=>b.onclick=()=>{rid=b.dataset.ph;$('#rf').click()});
-  document.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{if(confirm('¿Eliminar este producto de la página?')){W.prod=W.prod.filter(x=>x.id!=b.dataset.rm);saveW();go('web')}});
-  document.querySelectorAll('[data-t]').forEach(c=>c.onchange=()=>{W.prod.find(x=>x.id==c.dataset.t).on=c.checked?1:0;saveW();toast(c.checked?'Producto visible.':'Producto oculto.')});
+  $('#addWeb').onclick=()=>{
+    const n=$('#wn').value.trim(), d=$('#wd').value.trim(), cat=$('#wc').value, pr=$('#wp').value;
+    if(!n) return toast('Ingresa el nombre del producto.', 1);
+    const f=$('#wf').files[0];
+    const send=async img=>{
+      try {
+        const res = await fetch('/api/productos', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ nombre: n, categoria: cat, descripcion: d, precio: pr, imagen: img })
+        });
+        const dres = await res.json();
+        if(dres.ok) {
+          toast('Producto guardado en MySQL con éxito.');
+          $('#wn').value=''; $('#wd').value=''; $('#wp').value=''; if($('#wf'))$('#wf').value='';
+          loadWebProds();
+        } else {
+          toast(dres.error || 'Error al guardar', 1);
+        }
+      } catch(e) {
+        toast('Error de conexión', 1);
+      }
+    };
+    if(f) img2url(f, send);
+    else send('');
+  };
  }
  if(v==='promo'){
   loadPromos();

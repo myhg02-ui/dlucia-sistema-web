@@ -377,47 +377,110 @@ document.querySelectorAll('.facts strong').forEach(el=>{const to=+el.textContent
 addEventListener('scroll',()=>$('#nav').classList.toggle('sc',scrollY>10),{passive:true});
 
 
-// Contenido publicado desde el panel de administrador (clave dl_site)
-const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let site=null;try{site=JSON.parse(localStorage.getItem('dl_site'))}catch(e){}
-if(site){
-  if(site.hero){const a=$('.hero-art');a.style.background="url('"+site.hero+"') center/cover";a.querySelector('.tuft').hidden=true}
-  if(site.prod&&site.prod.length){
-    const sy=n=>/sill/i.test(n)?'chair':/cama/i.test(n)?'bed':/colch/i.test(n)?'matt':/cabec/i.test(n)?'head':/medida|personal/i.test(n)?'cust':'sofa';
-    $('#cat').innerHTML=site.prod.filter(p=>p.on).map(p=>`<article class="item" data-cat="${esc(p.cat)}"><div class="fig">${p.img?`<img src="${p.img}" alt="${esc(p.n)}" loading="lazy">`:`<svg viewBox="0 0 200 130"><use href="#${sy(p.n)}"/></svg>`}</div><h3>${esc(p.n)}</h3><p>${esc(p.d)}</p>${p.p?`<p class="pr-p">Desde S/ ${(+p.p).toFixed(2)}</p>`:''}<button class="link" data-q="${esc(p.n.toLowerCase())}">Cotizar</button></article>`).join('');
+// Contenido publicado desde MySQL y Panel de Administrador
+const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+// Renderizar promociones desde MySQL
+function renderPromos(promos){
+  const act=(promos||[]).filter(x=>x.on&&(!x.u||new Date(x.u+'T23:59:59')>Date.now()));
+  if(act.length){
+    $('#promos').hidden=false;$('#npromo').hidden=false;
+    $('#pg').innerHTML=act.map(x=>`<article class="pr"><b class="pc">-${x.pc}%</b><h3>${esc(x.t)}</h3><p>${esc(x.d)}</p><span class="cd" data-u="${x.u||''}"></span><a class="btn" href="#contacto" data-pq="${esc(x.t)}">Quiero esta promoción</a></article>`).join('');
+    const pb=$('#pb');pb.hidden=false;let k=0;
+    const show=()=>{const x=act[k++%act.length];pb.innerHTML=`<a href="#promos"><span>Promoción: ${esc(x.t)}, ${x.pc}% de descuento</span></a>`};show();if(act.length>1)setInterval(show,4000);
+    const tick=()=>document.querySelectorAll('.cd').forEach(e=>{if(!e.dataset.u){e.textContent='Por tiempo limitado';return}let s=Math.max(0,(new Date(e.dataset.u+'T23:59:59')-Date.now())/1000|0);e.textContent='Termina en '+(s/86400|0)+' d '+(s%86400/3600|0)+' h '+(s%3600/60|0)+' min '+s%60+' s'});tick();setInterval(tick,1000);
+    document.querySelectorAll('[data-pq]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();quote('Hola, quiero aprovechar la promoción "'+b.dataset.pq+'".')}));
+  } else {
+    $('#promos').hidden=true;$('#npromo').hidden=true;
   }
-  function renderPromos(promos){
-    const act=(promos||[]).filter(x=>x.on&&(!x.u||new Date(x.u+'T23:59:59')>Date.now()));
-    if(act.length){
-      $('#promos').hidden=false;$('#npromo').hidden=false;
-      $('#pg').innerHTML=act.map(x=>`<article class="pr"><b class="pc">-${x.pc}%</b><h3>${esc(x.t)}</h3><p>${esc(x.d)}</p><span class="cd" data-u="${x.u||''}"></span><a class="btn" href="#contacto" data-pq="${esc(x.t)}">Quiero esta promoción</a></article>`).join('');
-      const pb=$('#pb');pb.hidden=false;let k=0;
-      const show=()=>{const x=act[k++%act.length];pb.innerHTML=`<a href="#promos"><span>Promoción: ${esc(x.t)}, ${x.pc}% de descuento</span></a>`};show();if(act.length>1)setInterval(show,4000);
-      const tick=()=>document.querySelectorAll('.cd').forEach(e=>{if(!e.dataset.u){e.textContent='Por tiempo limitado';return}let s=Math.max(0,(new Date(e.dataset.u+'T23:59:59')-Date.now())/1000|0);e.textContent='Termina en '+(s/86400|0)+' d '+(s%86400/3600|0)+' h '+(s%3600/60|0)+' min '+s%60+' s'});tick();setInterval(tick,1000);
-      document.querySelectorAll('[data-pq]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();quote('Hola, quiero aprovechar la promoción "'+b.dataset.pq+'".')}));
-    } else {
-      $('#promos').hidden=true;$('#npromo').hidden=true;
+}
+
+// Cargar promociones reales desde MySQL
+fetch('/api/promociones')
+  .then(r=>r.json())
+  .then(json=>{
+    if(json.ok && json.data) {
+      renderPromos(json.data.map(x=>({t:x.titulo, d:x.descripcion, pc:x.porcentaje_descuento, u:(x.fecha_limite||'').slice(0,10), on:x.activa})));
     }
-  }
-  // Cargar promociones reales desde MySQL
-  fetch('/api/promociones')
+  })
+  .catch(()=>{});
+
+// Renderizar catálogo de productos (Regla P-05: solo productos con activo = 1)
+let currentFilter = 'all';
+function applyCurrentFilter(){
+  document.querySelectorAll('#cat .item').forEach(it=>{
+    const c = (it.dataset.cat||'').toLowerCase();
+    const show = currentFilter==='all' || c.includes(currentFilter);
+    it.classList.toggle('hide', !show);
+  });
+}
+
+function renderCatalogo(prods){
+  const catEl = $('#cat');
+  if(!catEl || !prods || !prods.length) return;
+  const sy=n=>/sill/i.test(n)?'chair':/cama/i.test(n)?'bed':/colch/i.test(n)?'matt':/cabec/i.test(n)?'head':/medida|personal/i.test(n)?'cust':'sofa';
+  catEl.innerHTML = prods.map(p=>{
+    const nom = p.nombre || p.n || '';
+    const cat = (p.categoria || p.cat || 'salas').toLowerCase();
+    const desc = p.descripcion || p.d || 'Mobiliario de alta calidad fabricado en taller D\'Lucia.';
+    const pr = p.precio_venta || p.p;
+    const img = p.imagen || p.img;
+    return `<article class="item" data-cat="${esc(cat)}">
+      <div class="fig">
+        ${img ? `<img src="${img}" alt="${esc(nom)}" loading="lazy">` : `<svg viewBox="0 0 200 130"><use href="#${sy(nom)}"/></svg>`}
+      </div>
+      <h3>${esc(nom)}</h3>
+      <p>${esc(desc)}</p>
+      ${pr && Number(pr) > 0 ? `<p class="pr-p">Desde S/ ${Number(pr).toFixed(2)}</p>` : ''}
+      <button class="link" data-q="${esc(nom.toLowerCase())}">Cotizar</button>
+    </article>`;
+  }).join('');
+  applyCurrentFilter();
+}
+
+// Cargar catálogo desde MySQL
+function loadCatalogoFromMySQL(){
+  fetch('/api/productos')
     .then(r=>r.json())
     .then(json=>{
-      if(json.ok && json.data) {
-        renderPromos(json.data.map(x=>({t:x.titulo, d:x.descripcion, pc:x.porcentaje_descuento, u:(x.fecha_limite||'').slice(0,10), on:x.activa})));
-      } else if(site && site.promo) {
-        renderPromos(site.promo);
+      if(json.ok && json.data && json.data.length > 0) {
+        renderCatalogo(json.data);
       }
     })
     .catch(()=>{
-      if(site && site.promo) renderPromos(site.promo);
+      let site=null;try{site=JSON.parse(localStorage.getItem('dl_site'))}catch(e){}
+      if(site && site.prod) renderCatalogo(site.prod.filter(p=>p.on));
     });
 }
-// Catálogo: filtros, configurador de tela y cotización directa
+loadCatalogoFromMySQL();
+
+// Portada dinámica
+try{
+  const site=JSON.parse(localStorage.getItem('dl_site'));
+  if(site && site.hero){
+    const a=$('.hero-art');
+    if(a){
+      a.style.background="url('"+site.hero+"') center/cover";
+      const tuft=a.querySelector('.tuft');
+      if(tuft) tuft.hidden=true;
+    }
+  }
+}catch(e){}
+
+// Catálogo: filtros, delegación de eventos y cotización
 document.querySelectorAll('#filters button').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('#filters button').forEach(x=>x.classList.toggle('on',x===b));
-  document.querySelectorAll('#cat .item').forEach(it=>it.classList.toggle('hide',b.dataset.f!=='all'&&!it.dataset.cat.includes(b.dataset.f)));
+  currentFilter = b.dataset.f;
+  applyCurrentFilter();
 }));
+
+$('#cat').addEventListener('click', e=>{
+  const b = e.target.closest('.link');
+  if(b && b.dataset.q){
+    quote('Hola, quiero cotizar ' + b.dataset.q + '.');
+  }
+});
+
 function quote(txt,linea){const f=$('#form');f.msg.value=txt;if(linea)f.linea.value=linea;$('#contacto').scrollIntoView({behavior:'smooth'});setTimeout(()=>f.nombre.focus({preventScroll:true}),700)}
 document.querySelectorAll('.link').forEach(b=>b.addEventListener('click',()=>quote('Hola, quiero cotizar '+b.dataset.q+'.')));
 document.querySelectorAll('#sw button').forEach(b=>b.addEventListener('click',()=>{

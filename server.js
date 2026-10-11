@@ -74,7 +74,7 @@ app.get('/api/productos', async (req, res) => {
   try {
     const query = `
       SELECT p.id_producto, p.codigo, p.nombre, p.categoria, p.linea_negocio, 
-             p.unidad_medida, p.stock_minimo,
+             p.unidad_medida, p.stock_minimo, p.descripcion, p.imagen,
              IFNULL(dlp.precio_venta, 0.00) AS precio_venta,
              IFNULL(s.existencia, 0) AS stock_actual
       FROM producto p
@@ -91,11 +91,67 @@ app.get('/api/productos', async (req, res) => {
   }
 });
 
-app.post('/api/productos', async (req, res) => {
-  const { codigo, nombre, categoria, unidad, precio, stock_minimo, linea } = req.body;
-  if (!codigo || !nombre) {
-    return res.status(400).json({ ok: false, error: 'Código y nombre son obligatorios.' });
+// Obtener todos los productos (activos e inactivos) para el panel de administración
+app.get('/api/productos/todos', async (req, res) => {
+  try {
+    const query = `
+      SELECT p.id_producto, p.codigo, p.nombre, p.categoria, p.linea_negocio, 
+             p.unidad_medida, p.stock_minimo, p.activo, p.descripcion, p.imagen,
+             IFNULL(dlp.precio_venta, 0.00) AS precio_venta,
+             IFNULL(s.existencia, 0) AS stock_actual
+      FROM producto p
+      LEFT JOIN lista_precios lp ON lp.estado = 'VIGENTE'
+      LEFT JOIN detalle_lista_precios dlp ON dlp.id_producto = p.id_producto AND dlp.id_lista_precios = lp.id_lista_precios
+      LEFT JOIN stock s ON p.id_producto = s.id_producto AND s.id_tienda = 1
+      ORDER BY p.id_producto ASC
+    `;
+    const [productos] = await pool.query(query);
+    res.json({ ok: true, data: productos });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
   }
+});
+
+// Activar/Desactivar visibilidad de producto para la venta (Regla P-05 de dlucia_sistema.sql)
+app.post('/api/productos/:id/toggle', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query('UPDATE producto SET activo = IF(activo = 1, 0, 1) WHERE id_producto = ? OR codigo = ?', [id, id]);
+    const [[p]] = await pool.query('SELECT activo FROM producto WHERE id_producto = ? OR codigo = ?', [id, id]);
+    res.json({ ok: true, activo: p ? p.activo : 0, mensaje: 'Visibilidad actualizada en MySQL (P-05)' });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+// Actualizar foto de producto en MySQL
+app.post('/api/productos/:id/foto', async (req, res) => {
+  const { id } = req.params;
+  const { imagen } = req.body;
+  try {
+    await pool.query('UPDATE producto SET imagen = ? WHERE id_producto = ? OR codigo = ?', [imagen, id, id]);
+    res.json({ ok: true, mensaje: 'Foto actualizada en MySQL' });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+app.delete('/api/productos/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query('UPDATE producto SET activo = 0 WHERE id_producto = ? OR codigo = ?', [id, id]);
+    res.json({ ok: true, mensaje: 'Producto desactivado de la venta en MySQL (P-05)' });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+app.post('/api/productos', async (req, res) => {
+  const { codigo, nombre, categoria, unidad, precio, stock_minimo, linea, descripcion, imagen } = req.body;
+  if (!nombre) {
+    return res.status(400).json({ ok: false, error: 'El nombre es obligatorio.' });
+  }
+  const codFinal = (codigo || ('WEB-' + Date.now().toString().slice(-4))).trim().toUpperCase();
 
   // Normalizar unidades según el ENUM estricto de dlucia_sistema.sql
   const u = String(unidad || '').toUpperCase().trim();
@@ -118,9 +174,9 @@ app.post('/api/productos', async (req, res) => {
 
     // 1. Insertar producto
     const [prodRes] = await conn.query(
-      `INSERT INTO producto (codigo, nombre, categoria, linea_negocio, unidad_medida, stock_minimo, activo)
-       VALUES (?, ?, ?, ?, ?, ?, 1)`,
-      [codigo.trim().toUpperCase(), nombre.trim(), categoria || 'General', lineaValida, unidadValida, Number(stock_minimo) || 0]
+      `INSERT INTO producto (codigo, nombre, categoria, linea_negocio, unidad_medida, stock_minimo, activo, descripcion, imagen)
+       VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)`,
+      [codFinal, nombre.trim(), categoria || 'General', lineaValida, unidadValida, Number(stock_minimo) || 0, descripcion || null, imagen || null]
     );
     const id_producto = prodRes.insertId;
 
