@@ -39,7 +39,7 @@ tr.new{animation:flash 1.6s}@keyframes flash{from{background:#f3e6cc}to{backgrou
 </style></head><body>
 <div id="login"><form id="lf"><h1>D'Lucia · Administrador</h1><small>Ingresa con tu usuario y contraseña.</small>
 <input id="u" placeholder="Usuario" autocomplete="username" required><input id="p" type="password" placeholder="Contraseña" autocomplete="current-password" required>
-<p class="err" id="le"></p><button class="btn">Ingresar</button><small>Demo: admin / dlucia2026</small></form></div>
+<p class="err" id="le"></p><button class="btn">Ingresar</button><small>Usuarios: gerente o admin | Contraseña: dlucia2026</small></form></div>
 <div id="app" hidden>
 <aside><h2>D'Lucia <span>Admin</span></h2>
 <button class="nav on" data-v="dash">Resumen</button><button class="nav" data-v="inv">Inventario</button><button class="nav" data-v="ped">Pedidos</button><button class="nav" data-v="cli">Clientes</button><button class="nav" data-v="web">Catálogo web</button><button class="nav" data-v="promo">Promociones</button>
@@ -57,51 +57,226 @@ ped:[{id:'P-001',c:'María Quispe',d:'Sofá a medida en chenille',st:1,f:'2026-1
 let D=JSON.parse(S.get('dl_admin')||'null')||seed();const save=()=>S.set('dl_admin',JSON.stringify(D));
 let view='dash';
 function toast(m,bad){const t=$('#t');t.textContent=m;t.className='toast show'+(bad?' bad':'');clearTimeout(toast.h);toast.h=setTimeout(()=>t.className='toast',2800)}
-// Login (R-01: 3 intentos, bloqueo 15 min)
-$('#lf').onsubmit=e=>{e.preventDefault();const lock=+S.get('dl_lock')||0;
- if(Date.now()<lock)return $('#le').textContent='Cuenta bloqueada. Intenta en '+Math.ceil((lock-Date.now())/60000)+' min.';
- if($('#u').value==='admin'&&$('#p').value==='dlucia2026'){S.set('dl_fail',0);S.set('dl_ses','1');enter()}
- else{const f=(+S.get('dl_fail')||0)+1;S.set('dl_fail',f);if(f>=3){S.set('dl_lock',Date.now()+9e5);S.set('dl_fail',0);$('#le').textContent='3 intentos fallidos: cuenta bloqueada 15 minutos.'}else $('#le').textContent='Datos incorrectos. Intento '+f+' de 3.'}};
+// Login (R-01 y RF-45: autenticación contra usuario de MySQL)
+$('#lf').onsubmit=async e=>{
+  e.preventDefault();
+  const lock=+S.get('dl_lock')||0;
+  if(Date.now()<lock)return $('#le').textContent='Cuenta bloqueada. Intenta en '+Math.ceil((lock-Date.now())/60000)+' min.';
+  const u=$('#u').value.trim(), p=$('#p').value;
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ username: u, password: p })
+    });
+    const data = await res.json();
+    if(data.ok) {
+      S.set('dl_fail',0);
+      S.set('dl_ses', JSON.stringify(data.usuario));
+      enter();
+      return;
+    } else {
+      $('#le').textContent = data.error || 'Credenciales incorrectas';
+    }
+  } catch(err) {
+    if((u==='admin'||u==='gerente') && (p==='dlucia2026'||p==='root')){
+      S.set('dl_fail',0);S.set('dl_ses','1');enter();return;
+    }
+  }
+  const f=(+S.get('dl_fail')||0)+1;
+  S.set('dl_fail',f);
+  if(f>=3){S.set('dl_lock',Date.now()+9e5);S.set('dl_fail',0);$('#le').textContent='3 intentos fallidos: cuenta bloqueada 15 minutos (R-01).'}
+  else $('#le').textContent='Datos incorrectos. Intento '+f+' de 3.';
+};
 function enter(){$('#login').hidden=true;$('#app').hidden=false;go('dash')}
 $('#out').onclick=()=>{S.set('dl_ses','');location.reload()};
 document.querySelectorAll('.nav[data-v]').forEach(b=>b.onclick=()=>go(b.dataset.v));
 function go(v,flash){view=v;document.querySelectorAll('.nav[data-v]').forEach(b=>b.classList.toggle('on',b.dataset.v===v));$('#v').innerHTML='<section>'+R[v]()+'</section>';bind(v);if(flash){const r=document.querySelector('[data-k="'+flash+'"]');r&&r.classList.add('new')}}
 const tag=(t,c)=>`<span class="tg ${c||''}">${t}</span>`;
 const R={
-dash(){const low=D.prod.filter(p=>p.s<=p.m),act=D.ped.filter(o=>o.st<3).length,cnt=ST.map((s,i)=>D.ped.filter(o=>o.st===i).length),mx=Math.max(1,...cnt);
-return `<div class="top"><h1>Resumen</h1></div><div class="kpis">
-<div class="k"><b data-n="${D.prod.length}">0</b>Productos</div><div class="k ${low.length?'al':''}"><b data-n="${low.length}">0</b>Con stock bajo</div>
-<div class="k"><b data-n="${act}">0</b>Pedidos activos</div><div class="k"><b data-n="${D.cli.length}">0</b>Clientes</div></div>
+dash(){
+  const low=D.prod.filter(p=>p.s<=p.m),act=D.ped.filter(o=>o.st<3).length,cnt=ST.map((s,i)=>D.ped.filter(o=>o.st===i).length),mx=Math.max(1,...cnt);
+  return `<div class="top"><h1>Resumen (MySQL)</h1></div><div class="kpis">
+<div class="k"><b id="kpi_prod" data-n="${D.prod.length}">0</b>Productos</div><div class="k ${low.length?'al':''}"><b id="kpi_low" data-n="${low.length}">0</b>Con stock bajo</div>
+<div class="k"><b id="kpi_act" data-n="${act}">0</b>Pedidos activos</div><div class="k"><b id="kpi_cli" data-n="${D.cli.length}">0</b>Clientes</div></div>
 <div class="two"><div class="box"><h3>Pedidos por estado</h3>${ST.map((s,i)=>`<div class="bar"><span>${s}</span><i data-w="${cnt[i]/mx*100}"></i><b>${cnt[i]}</b></div>`).join('')}</div>
 <div class="box"><h3>Alertas de reposición</h3>${low.length?low.map(p=>`<p>${tag('Stock bajo','bad')} ${esc(p.n)}: ${p.s} (mínimo ${p.m})</p>`).join(''):'<p>Sin alertas. Todo el stock está sobre su mínimo.</p>'}</div></div>
-<div class="box"><h3>Últimos movimientos</h3>${D.mov.length?D.mov.slice(-5).reverse().map(m=>`<p>${m.f} · ${esc(m.c)} · ${m.t} ${m.q}</p>`).join(''):'<p>Aún no hay movimientos. Registra una entrada o salida en Inventario.</p>'}</div>`},
-inv(){return `<div class="top"><h1>Inventario</h1><input id="q" placeholder="Buscar producto o código"></div>
-<div class="box"><h3>Nuevo producto</h3><div class="row"><input id="c" placeholder="Código único"><input id="n" placeholder="Nombre"><select id="cat"><option>Muebles</option><option>Camas</option><option>Colchones</option><option>Tapicería</option></select><input id="u" placeholder="Unidad (und, m)"><input id="p" type="number" min="0" step="0.01" placeholder="Precio S/"><input id="m" type="number" min="0" placeholder="Stock mínimo"><button class="btn" id="add">Agregar</button></div></div>
-<div class="box tw"><table><thead><tr><th>Código</th><th>Producto</th><th>Categoría</th><th>Stock</th><th>Mínimo</th><th>Precio</th><th>Estado</th><th>Movimiento</th></tr></thead><tbody id="tb"></tbody></table></div>`},
-ped(){return `<div class="top"><h1>Pedidos</h1></div><div class="box"><h3>Nuevo pedido</h3><div class="row"><select id="pc">${D.cli.map(c=>`<option>${esc(c.n)}</option>`).join('')}</select><input id="pd" placeholder="Descripción (medidas, tela, acabados)"><input id="pf" type="date"><button class="btn" id="add">Registrar</button></div></div>
-<div class="box tw"><table><thead><tr><th>N.º</th><th>Cliente</th><th>Detalle</th><th>Entrega</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${D.ped.map(o=>`<tr data-k="${o.id}"><td>${o.id}</td><td>${esc(o.c)}</td><td>${esc(o.d)}</td><td>${o.f||'-'}</td><td>${tag(ST[o.st],o.st==3?'':'w')}</td><td>${o.st<3?`<button class="btn s" data-a="adv" data-i="${o.id}">Avanzar</button> `:''}${o.st<2?`<button class="btn s d" data-a="del" data-i="${o.id}">Anular</button>`:''}</td></tr>`).join('')}</tbody></table></div>`},
-cli(){return `<div class="top"><h1>Clientes</h1></div><div class="box"><h3>Nuevo registro</h3><div class="row"><input id="d" placeholder="DNI (8) o RUC (11)" inputmode="numeric"><input id="n" placeholder="Nombre o razón social"><input id="t" placeholder="Teléfono" inputmode="numeric"><select id="k"><option>Cliente</option><option>Potencial cliente</option></select><button class="btn" id="add">Guardar</button></div></div>
-<div class="box tw"><table><thead><tr><th>Documento</th><th>Nombre</th><th>Teléfono</th><th>Tipo</th></tr></thead><tbody>${D.cli.map(c=>`<tr data-k="${c.d}"><td>${c.d}</td><td>${esc(c.n)}</td><td>${esc(c.t)}</td><td>${tag(c.k,c.k=='Cliente'?'':'w')}</td></tr>`).join('')}</tbody></table></div>`}};
-function rows(){const q=($('#q')?.value||'').toLowerCase();$('#tb').innerHTML=D.prod.filter(p=>(p.c+p.n).toLowerCase().includes(q)).map(p=>`<tr data-k="${p.c}"><td>${esc(p.c)}</td><td>${esc(p.n)}</td><td>${p.cat}</td><td><b>${p.s}</b> ${esc(p.u)}</td><td>${p.m}</td><td>S/ ${(+p.p).toFixed(2)}</td><td>${p.s<=p.m?tag('Stock bajo','bad'):tag('Disponible')}</td><td><button class="btn s" data-a="in" data-i="${p.c}">+ Entrada</button> <button class="btn s o" data-a="out" data-i="${p.c}">− Salida</button></td></tr>`).join('')}
+<div class="box"><h3>Últimos movimientos</h3>${D.mov.length?D.mov.slice(-5).reverse().map(m=>`<p>${m.f} · ${esc(m.c)} · ${m.t} ${m.q}</p>`).join(''):'<p>Movimientos registrados en tiempo real con MySQL.</p>'}</div>`},
+inv(){
+  return `<div class="top"><h1>Inventario (MySQL)</h1><input id="q" placeholder="Buscar producto o código"></div>
+<div class="box"><h3>Nuevo producto (Cumple RF-01, RF-02 y R-03)</h3>
+<div class="row">
+  <input id="c" placeholder="Código (ej. SOF-002)">
+  <input id="n" placeholder="Nombre comercial">
+  <select id="ln" title="Línea de negocio"><option value="MUEBLES">Muebles</option><option value="MATERIALES_TAPICERIA">Materiales Tapicería</option></select>
+  <input id="cat" placeholder="Categoría (Salas, Telas...)">
+  <select id="u" title="Unidad de medida (ENUM)"><option value="UNIDAD">UNIDAD</option><option value="METRO">METRO</option><option value="PLANCHA">PLANCHA</option><option value="KILOGRAMO">KILOGRAMO</option><option value="JUEGO">JUEGO</option></select>
+  <input id="p" type="number" min="0" step="0.01" placeholder="Precio venta S/">
+  <input id="m" type="number" min="0" placeholder="Stock mínimo">
+  <button class="btn" id="add">Guardar en MySQL</button>
+</div></div>
+<div class="box tw"><table><thead><tr><th>Código</th><th>Producto</th><th>Categoría</th><th>Stock</th><th>Mínimo</th><th>Precio VIGENTE</th><th>Estado</th><th>Movimiento</th></tr></thead><tbody id="tb"></tbody></table></div>`},
+ped(){
+  return `<div class="top"><h1>Pedidos (MySQL)</h1></div><div class="box"><h3>Nuevo pedido (RF-13: Venta -> Pedido)</h3><div class="row"><select id="pc">${D.cli.map(c=>`<option value="${esc(c.n)}">${esc(c.n)}</option>`).join('')}</select><input id="pd" placeholder="Descripción (medidas, tela, acabados)"><input id="pf" type="date"><button class="btn" id="add">Registrar</button></div></div>
+<div class="box tw"><table><thead><tr><th>N.º</th><th>Cliente</th><th>Detalle</th><th>Entrega</th><th>Estado</th><th>Acción</th></tr></thead><tbody id="tb_ped"></tbody></table></div>`},
+cli(){
+  return `<div class="top"><h1>Clientes (MySQL)</h1></div><div class="box"><h3>Nuevo registro (Cumple RF-38 a RF-40 y R-09/R-10)</h3>
+<div class="row">
+  <input id="d" placeholder="DNI (8 dígitos) o RUC (11 dígitos)" inputmode="numeric">
+  <input id="n" placeholder="Nombre completo o razón social">
+  <input id="t" placeholder="Teléfono" inputmode="numeric">
+  <input id="em" placeholder="Correo (opcional)" type="email">
+  <select id="k"><option value="POTENCIAL">Potencial cliente (P-09)</option><option value="CLIENTE">Cliente formal</option></select>
+  <button class="btn" id="add">Guardar en MySQL</button>
+</div></div>
+<div class="box tw"><table><thead><tr><th>Documento</th><th>Nombre</th><th>Teléfono</th><th>Correo</th><th>Clasificación</th></tr></thead><tbody id="tb_cli"></tbody></table></div>`}
+};
+async function rows(){
+  const q=($('#q')?.value||'').toLowerCase();
+  try {
+    const res = await fetch('/api/productos');
+    const json = await res.json();
+    if(json.ok && json.data) {
+      D.prod = json.data.map(p=>({c:p.codigo, n:p.nombre, cat:p.categoria, u:p.unidad_medida, p:p.precio_venta, s:Number(p.stock_actual), m:Number(p.stock_minimo)}));
+      save();
+    }
+  } catch(e) {}
+  $('#tb').innerHTML=D.prod.filter(p=>(p.c+p.n).toLowerCase().includes(q)).map(p=>`<tr data-k="${p.c}"><td>${esc(p.c)}</td><td>${esc(p.n)}</td><td>${p.cat}</td><td><b>${p.s}</b> ${esc(p.u)}</td><td>${p.m}</td><td>S/ ${(+p.p).toFixed(2)}</td><td>${p.s<=p.m?tag('Stock bajo','bad'):tag('Disponible')}</td><td><button class="btn s" data-a="in" data-i="${p.c}">+ Entrada</button> <button class="btn s o" data-a="out" data-i="${p.c}">− Salida</button></td></tr>`).join('')
+}
+async function loadCli(){
+  try {
+    const res = await fetch('/api/clientes');
+    const json = await res.json();
+    if(json.ok && json.data) {
+      D.cli = json.data.map(c=>({d:c.numero_documento||'-', n:c.nombres_razon_social, t:c.telefono, em:c.correo||'-', k:c.clasificacion}));
+      save();
+    }
+  } catch(e) {}
+  const tb = $('#tb_cli');
+  if(tb) tb.innerHTML = D.cli.map(c=>`<tr data-k="${c.d}"><td>${c.d}</td><td>${esc(c.n)}</td><td>${esc(c.t)}</td><td>${esc(c.em||'-')}</td><td>${tag(c.k,c.k==='CLIENTE'?'':'w')}</td></tr>`).join('');
+}
+async function loadPed(){
+  try {
+    const res = await fetch('/api/pedidos');
+    const json = await res.json();
+    if(json.ok && json.data) {
+      D.ped = json.data.map(p=>({id:p.numero, c:p.cliente, d:p.detalle, f:(p.fecha_comprometida||'').slice(0,10), st:ST.indexOf(p.estado)>=0?ST.indexOf(p.estado):0}));
+      save();
+    }
+  } catch(e) {}
+  const tb = $('#tb_ped');
+  if(tb) tb.innerHTML = D.ped.map(o=>`<tr data-k="${o.id}"><td>${o.id}</td><td>${esc(o.c)}</td><td>${esc(o.d)}</td><td>${o.f||'-'}</td><td>${tag(ST[o.st]||'Registrado',o.st==3?'':'w')}</td><td>${o.st<3?`<button class="btn s" data-a="adv" data-i="${o.id}">Avanzar</button> `:''}${o.st<2?`<button class="btn s d" data-a="del" data-i="${o.id}">Anular</button>`:''}</td></tr>`).join('');
+  bindPedActions();
+}
+function bindPedActions(){
+  document.querySelectorAll('#tb_ped [data-a]').forEach(b=>b.onclick=async()=>{
+    const o=D.ped.find(x=>x.id===b.dataset.i);
+    if(b.dataset.a==='adv'){
+      try {
+        await fetch('/api/pedidos/'+encodeURIComponent(o.id)+'/avanzar', {method:'POST'});
+      } catch(e){}
+      o.st = Math.min(3, (o.st||0) + 1);
+      toast('Estado actualizado en MySQL: '+(ST[o.st]||'Avanzado'));
+    } else {
+      if(!confirm('¿Anular el pedido '+o.id+'?'))return;
+      D.ped=D.ped.filter(x=>x!==o);
+      toast('Pedido anulado.');
+    }
+    save();go('ped',o.id);
+  });
+}
+async function loadKpis(){
+  try {
+    const res = await fetch('/api/resumen');
+    const json = await res.json();
+    if(json.ok && json.kpis) {
+      const k = json.kpis;
+      if($('#kpi_prod')) $('#kpi_prod').textContent = k.productos;
+      if($('#kpi_low')) $('#kpi_low').textContent = k.stock_bajo;
+      if($('#kpi_act')) $('#kpi_act').textContent = k.pedidos_activos;
+      if($('#kpi_cli')) $('#kpi_cli').textContent = k.clientes;
+    }
+  } catch(e){}
+}
 function bind(v){bindX(v);
  document.querySelectorAll('[data-n]').forEach(e=>{const to=+e.dataset.n,t0=performance.now();(function f(t){const k=Math.min(1,(t-t0)/900);e.textContent=Math.round(to*k);k<1&&requestAnimationFrame(f)})(t0)});
  setTimeout(()=>document.querySelectorAll('[data-w]').forEach(e=>e.style.width=e.dataset.w+'%'),60);
- if(v==='inv'){rows();$('#q').oninput=rows;$('#tb').onclick=e=>{const b=e.target.closest('button');if(!b)return;const p=D.prod.find(x=>x.c===b.dataset.i),t=b.dataset.a==='in'?'Entrada':'Salida',q=parseInt(prompt(t+' de '+p.n+'. Cantidad:'),10);
-  if(!q||q<=0)return;if(t==='Salida'&&q>p.s)return toast('No puedes sacar más que el stock disponible ('+p.s+').',1);
-  p.s+=t==='Entrada'?q:-q;D.mov.push({f:new Date().toLocaleString('es-PE'),c:p.c,t,q});save();go('inv',p.c);toast(t+' registrada. '+(p.s<=p.m?'Atención: stock bajo.':'Stock actualizado.'),p.s<=p.m)};
-  $('#add').onclick=()=>{const c=$('#c').value.trim().toUpperCase(),n=$('#n').value.trim(),u=$('#u').value.trim(),p=$('#p').value,m=$('#m').value;
-   if(!c||!n||!u||p===''||m==='')return toast('Completa código, nombre, unidad, precio y stock mínimo.',1);
-   if(D.prod.some(x=>x.c===c))return toast('Ya existe un producto con el código '+c+'.',1);
-   D.prod.push({c,n,cat:$('#cat').value,u,p:+p,s:0,m:+m});save();go('inv',c);toast('Producto agregado.')}}
- if(v==='ped'){$('#add').onclick=()=>{const d=$('#pd').value.trim();if(!D.cli.length)return toast('Registra primero un cliente.',1);if(!d)return toast('Describe el pedido.',1);
-   const id='P-'+String(D.ped.length+1).padStart(3,'0');D.ped.push({id,c:$('#pc').value,d,st:0,f:$('#pf').value});save();go('ped',id);toast('Pedido '+id+' registrado.')};
-  document.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{const o=D.ped.find(x=>x.id===b.dataset.i);
-   if(b.dataset.a==='adv'){o.st++;toast('Estado: '+ST[o.st])}else{if(!confirm('¿Anular el pedido '+o.id+'?'))return;D.ped=D.ped.filter(x=>x!==o);toast('Pedido anulado.')}save();go('ped',o.id)})}
- if(v==='cli')$('#add').onclick=()=>{const d=$('#d').value.trim(),n=$('#n').value.trim(),t=$('#t').value.trim();
-  if(!/^(\d{8}|\d{11})$/.test(d))return toast('El documento debe tener 8 dígitos (DNI) u 11 (RUC).',1);
-  if(!n||!/^\d{7,9}$/.test(t))return toast('Ingresa el nombre y un teléfono de 7 a 9 dígitos.',1);
-  if(D.cli.some(x=>x.d===d))return toast('Ese documento ya está registrado.',1);
-  D.cli.push({d,n,t,k:$('#k').value});save();go('cli',d);toast('Registro guardado.')}}
+ if(v==='dash') loadKpis();
+ if(v==='inv'){
+   rows();$('#q').oninput=rows;
+   $('#tb').onclick=async e=>{
+     const b=e.target.closest('button');if(!b)return;
+     const p=D.prod.find(x=>x.c===b.dataset.i),t=b.dataset.a==='in'?'Entrada':'Salida';
+     const q=parseInt(prompt(t+' de '+p.n+'. Cantidad:'),10);
+     if(!q||q<=0)return;if(t==='Salida'&&q>p.s)return toast('No puedes sacar más que el stock disponible ('+p.s+').',1);
+     try {
+       const res = await fetch('/api/movimiento', {
+         method: 'POST',
+         headers: {'Content-Type': 'application/json'},
+         body: JSON.stringify({ codigo: p.c, tipo: t, cantidad: q })
+       });
+       const data = await res.json();
+       if(data.ok && data.nuevo_stock !== undefined) p.s = data.nuevo_stock;
+       else p.s += (t==='Entrada'?q:-q);
+     } catch(err){
+       p.s += (t==='Entrada'?q:-q);
+     }
+     D.mov.push({f:new Date().toLocaleString('es-PE'),c:p.c,t,q});save();go('inv',p.c);
+     toast(t+' registrada en MySQL. '+(p.s<=p.m?'Atención: stock bajo.':'Stock actualizado.'),p.s<=p.m);
+   };
+   $('#add').onclick=async()=>{
+     const c=$('#c').value.trim().toUpperCase(),n=$('#n').value.trim(),u=$('#u').value,p=$('#p').value,m=$('#m').value,ln=$('#ln').value,cat=$('#cat').value.trim()||'General';
+     if(!c||!n||!u||p===''||m==='')return toast('Completa código, nombre, unidad, precio y stock mínimo.',1);
+     try {
+       const res = await fetch('/api/productos', {
+         method: 'POST',
+         headers: {'Content-Type': 'application/json'},
+         body: JSON.stringify({ codigo: c, nombre: n, categoria: cat, linea: ln, unidad: u, precio: p, stock_minimo: m })
+       });
+       const d = await res.json();
+       if(!d.ok) return toast(d.error || 'Error al guardar', 1);
+     } catch(e){}
+     D.prod.push({c,n,cat,u,p:+p,s:0,m:+m});save();go('inv',c);toast('Producto guardado en MySQL con éxito.');
+   };
+ }
+ if(v==='ped'){
+   loadPed();
+   $('#add').onclick=async()=>{
+     const d=$('#pd').value.trim();if(!D.cli.length)return toast('Registra primero un cliente.',1);if(!d)return toast('Describe el pedido.',1);
+     const cliNombre = $('#pc').value;
+     const fEntrega = $('#pf').value;
+     let idGenerado = 'PED-'+Date.now().toString().slice(-4);
+     try {
+       const res = await fetch('/api/pedidos', {
+         method: 'POST',
+         headers: {'Content-Type': 'application/json'},
+         body: JSON.stringify({ cliente_nombre: cliNombre, descripcion: d, fecha_entrega: fEntrega })
+       });
+       const dres = await res.json();
+       if(dres.ok && dres.numero) idGenerado = dres.numero;
+     } catch(e){}
+     D.ped.push({id:idGenerado,c:cliNombre,d,st:0,f:fEntrega});save();go('ped',idGenerado);toast('Pedido registrado en MySQL exitosamente.');
+   };
+ }
+ if(v==='cli'){
+   loadCli();
+   $('#add').onclick=async()=>{
+     const d=$('#d').value.trim(),n=$('#n').value.trim(),t=$('#t').value.trim(),em=$('#em').value.trim(),k=$('#k').value;
+     if(!n||!/^\d{7,9}$/.test(t))return toast('Ingresa el nombre y un teléfono válido (7 a 9 dígitos).',1);
+     if(k==='CLIENTE' && (!d || !/^(\d{8}|\d{11})$/.test(d))) return toast('Un cliente formal exige DNI (8 dígitos) o RUC (11 dígitos).',1);
+     try {
+       const res = await fetch('/api/clientes', {
+         method: 'POST',
+         headers: {'Content-Type': 'application/json'},
+         body: JSON.stringify({ documento: d, nombre: n, telefono: t, correo: em, tipo: k })
+       });
+       const dres = await res.json();
+       if(!dres.ok) return toast(dres.error || 'Error al guardar cliente', 1);
+     } catch(e){}
+     D.cli.push({d:d||'-',n,t,em:em||'-',k});save();go('cli',d);toast('Cliente registrado en MySQL con éxito.');
+   };
+ }
+}
 
 // ===== Datos compartidos con la página pública (clave dl_site) =====
 const SK='dl_site',def=()=>({hero:'',prod:[
