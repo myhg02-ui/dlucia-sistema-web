@@ -193,7 +193,7 @@ summary::-webkit-details-marker{display:none}summary::after{content:"+";color:va
     <h2>Lo que fabricamos y vendemos</h2>
     <p class="lead">Una muestra de nuestras líneas. Cada pieza puede hacerse a tus medidas, con la tela y el acabado que elijas.</p>
     <div class="filters" id="filters" role="group" aria-label="Filtrar catálogo">
-      <button class="on" data-f="all">Todos</button><button data-f="salas">Salas</button><button data-f="descanso">Descanso</button><button data-f="medida">A medida</button>
+      <button class="on" data-f="all">Todos</button><button data-f="salas">Salas</button><button data-f="descanso">Descanso</button><button data-f="medida">A medida</button><button data-f="telas">Telas</button><button data-f="espumas">Espumas</button>
     </div>
     <div class="grid3 cat" id="cat">
       <article class="item" data-cat="salas medida"><div class="fig"><svg viewBox="0 0 200 130"><use href="#sofa"/></svg></div><h3>Sofás</h3><p>De dos y tres cuerpos, con casco armado en nuestro taller y tapizado a tu elección.</p><button class="link" data-q="un sofá">Cotizar</button></article>
@@ -408,15 +408,24 @@ function renderPromos(promos){
   }
 }
 
-// Cargar promociones reales desde MySQL
+// Cargar promociones reales desde MySQL (con respaldo para web online)
+const PROMOS_OFICIALES = [
+  { t: 'Temporada de Salas: 15% de descuento', d: 'Aplica a juegos de sala y sofás a medida en telas velvet y lino.', pc: 15, u: '2026-10-31', on: 1 },
+  { t: 'Semana del Descanso: 20% de descuento', d: 'En camas con cabecera tapizada y colchones ortopédicos de dos plazas.', pc: 20, u: '2026-11-15', on: 1 }
+];
+
 fetch('/api/promociones')
   .then(r=>r.json())
   .then(json=>{
-    if(json.ok && json.data) {
+    if(json.ok && json.data && json.data.length > 0) {
       renderPromos(json.data.map(x=>({t:x.titulo, d:x.descripcion, pc:x.porcentaje_descuento, u:(x.fecha_limite||'').slice(0,10), on:x.activa})));
+    } else {
+      renderPromos(PROMOS_OFICIALES);
     }
   })
-  .catch(()=>{});
+  .catch(()=>{
+    renderPromos(PROMOS_OFICIALES);
+  });
 
 // Renderizar catálogo de productos (Regla P-05: solo productos con activo = 1)
 let currentFilter = 'all';
@@ -431,7 +440,7 @@ function applyCurrentFilter(){
 function renderCatalogo(prods, mostrarPrecios){
   const catEl = $('#cat');
   if(!catEl || !prods || !prods.length) return;
-  const sy=n=>/sill/i.test(n)?'chair':/cama/i.test(n)?'bed':/colch/i.test(n)?'matt':/cabec/i.test(n)?'head':/medida|personal/i.test(n)?'cust':'sofa';
+  const sy=n=>/sill/i.test(n)?'chair':/cama/i.test(n)?'bed':/colch/i.test(n)?'matt':/cabec/i.test(n)?'head':/tela|espuma/i.test(n)?'cust':/medida|personal/i.test(n)?'cust':'sofa';
   catEl.innerHTML = prods.map(p=>{
     const nom = p.nombre || p.n || '';
     const cat = (p.categoria || p.cat || 'salas').toLowerCase();
@@ -464,7 +473,19 @@ function renderCatalogo(prods, mostrarPrecios){
   applyCurrentFilter();
 }
 
-// Cargar catálogo desde MySQL
+// Catálogo oficial D'Lucia garantizado para web online y local
+const PRODUCTOS_OFICIALES = [
+  { codigo: 'MU-001', nombre: 'Sofá 3 cuerpos terciopelo', categoria: 'salas', descripcion: 'De tres cuerpos, con casco armado en madera tornillo y tapizado en terciopelo suave a tu elección.', precio_venta: 1249.00 },
+  { codigo: 'MU-002', nombre: 'Sillón individual nórdico', categoria: 'salas', descripcion: 'Individual para sala o dormitorio, con patas cónicas de madera y espuma de alta densidad.', precio_venta: 650.00 },
+  { codigo: 'CA-001', nombre: 'Cama con cabecera tapizada', categoria: 'descanso', descripcion: 'Cama de dos plazas con cabecera tapizada para el descanso de toda la familia.', precio_venta: 980.00 },
+  { codigo: 'CO-001', nombre: 'Colchón ortopédico 2 plazas', categoria: 'descanso', descripcion: 'Colchón ortopédico con soporte ergonómico para un descanso reparador y duradero.', precio_venta: 780.00 },
+  { codigo: 'CB-001', nombre: 'Cabecera capitoné a medida', categoria: 'a medida descanso', descripcion: 'Diseño clásico capitoné con botones forrados, hecho a la medida exacta de tu cama.', precio_venta: 420.00 },
+  { codigo: 'MU-003', nombre: 'Sofá seccional modular', categoria: 'salas a medida', descripcion: 'Sofá en L reversible con chaiselongue, ideal para aprovechar esquinas y reuniones familiares.', precio_venta: 1890.00 },
+  { codigo: 'TE-001', nombre: 'Tela terciopelo verde bosque', categoria: 'telas', descripcion: 'Tela velvet de alto gramaje para tapicería, resistente al roce y de textura premium.', precio_venta: 28.00 },
+  { codigo: 'ES-001', nombre: 'Espuma zebra D20 (plancha)', categoria: 'espumas', descripcion: 'Plancha de espuma de poliuretano densidad 20 kg/m³, ideal para asientos y espaldares.', precio_venta: 95.00 }
+];
+
+// Cargar catálogo desde MySQL con respaldo automático
 function loadCatalogoFromMySQL(){
   fetch('/api/productos')
     .then(r=>r.json())
@@ -472,11 +493,14 @@ function loadCatalogoFromMySQL(){
       if(json.ok && json.data && json.data.length > 0) {
         const mostrarPrecios = json.config && json.config.mostrar_precios;
         renderCatalogo(json.data, mostrarPrecios);
+      } else {
+        renderCatalogo(PRODUCTOS_OFICIALES, false);
       }
     })
     .catch(()=>{
       let site=null;try{site=JSON.parse(localStorage.getItem('dl_site'))}catch(e){}
-      if(site && site.prod) renderCatalogo(site.prod.filter(p=>p.on), false);
+      if(site && site.prod && site.prod.length) renderCatalogo(site.prod.filter(p=>p.on), false);
+      else renderCatalogo(PRODUCTOS_OFICIALES, false);
     });
 }
 loadCatalogoFromMySQL();
