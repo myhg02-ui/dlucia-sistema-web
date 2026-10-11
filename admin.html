@@ -51,7 +51,7 @@ tr.new{animation:flash 1.6s}@keyframes flash{from{background:#f3e6cc}to{backgrou
 <aside><h2>D'Lucia <span>Admin</span></h2>
 <button class="nav on" data-v="dash">Resumen</button><button class="nav" data-v="inv">Inventario</button><button class="nav" data-v="ped">Pedidos</button><button class="nav" data-v="cli">Clientes</button><button class="nav" data-v="web">Catálogo web</button><button class="nav" data-v="promo">Promociones</button>
 <div class="sp"></div><a href="index.html">Ver página pública</a><button class="nav" id="out">Cerrar sesión</button></aside>
-<main id="v"></main></div><div class="toast" id="t"></div>
+<main id="v"></main></div><div class="toast" id="toast_box"></div>
 <script>
 const $=s=>document.querySelector(s),ST=['Registrado','En fabricación','Listo para entrega','Entregado'];
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -63,7 +63,7 @@ cli:[{d:'45871236',n:'María Quispe',t:'987654321',k:'Cliente'},{d:'20601234567'
 ped:[{id:'P-001',c:'María Quispe',d:'Sofá a medida en chenille',st:1,f:'2026-11-05'}],mov:[]});
 let D=JSON.parse(S.get('dl_admin')||'null')||seed();const save=()=>S.set('dl_admin',JSON.stringify(D));
 let view='dash';
-function toast(m,bad){const t=$('#t');t.textContent=m;t.className='toast show'+(bad?' bad':'');clearTimeout(toast.h);toast.h=setTimeout(()=>t.className='toast',4500)}
+function toast(m,bad){const t=$('#toast_box');t.textContent=m;t.className='toast show'+(bad?' bad':'');clearTimeout(toast.h);toast.h=setTimeout(()=>t.className='toast',4500)}
 // Login (R-01 y RF-45: autenticación contra usuario de MySQL)
 $('#lf').onsubmit=async e=>{
   e.preventDefault();
@@ -129,12 +129,12 @@ ped(){
 cli(){
   return `<div class="top"><h1>Directorio de clientes</h1></div><div class="box"><h3>Registrar nuevo cliente</h3>
 <div class="row">
-  <input id="d" placeholder="DNI (8 dígitos) o RUC (11 dígitos)" inputmode="numeric">
-  <input id="n" placeholder="Nombre completo o razón social">
-  <input id="t" placeholder="Teléfono" inputmode="numeric">
-  <input id="em" placeholder="Correo (opcional)" type="email">
-  <select id="k"><option value="POTENCIAL">Potencial cliente</option><option value="CLIENTE">Cliente formal</option></select>
-  <button class="btn" id="add">Guardar cliente</button>
+  <input id="cli_doc" placeholder="DNI (8 dígitos) o RUC (11 dígitos)" inputmode="numeric">
+  <input id="cli_nom" placeholder="Nombre completo o razón social">
+  <input id="cli_tel" placeholder="Teléfono" inputmode="numeric">
+  <input id="cli_em" placeholder="Correo (opcional)" type="email">
+  <select id="cli_tipo"><option value="POTENCIAL">Potencial cliente</option><option value="CLIENTE">Cliente formal</option></select>
+  <button class="btn" id="btnAddCli">Guardar cliente</button>
 </div></div>
 <div class="box tw"><table><thead><tr><th>Documento</th><th>Nombre</th><th>Teléfono</th><th>Correo</th><th>Clasificación</th></tr></thead><tbody id="tb_cli"></tbody></table></div>`}
 };
@@ -372,18 +372,22 @@ function bind(v){bindX(v);
  }
  if(v==='cli'){
    loadCli();
-   $('#add').onclick=async()=>{
-     const d=$('#d').value.trim(),n=$('#n').value.trim(),t=$('#t').value.trim(),em=$('#em').value.trim(),k=$('#k').value;
+   $('#btnAddCli').onclick=async()=>{
+     const d=$('#cli_doc').value.trim();
+     const n=$('#cli_nom').value.trim();
+     const t=$('#cli_tel').value.trim();
+     const em=$('#cli_em').value.trim();
+     const k=$('#cli_tipo').value;
      if(!n){
-       $('#n').focus();
+       $('#cli_nom').focus();
        return toast('Ingresa el nombre completo o razón social.',1);
      }
-     if(!/^\d{7,9}$/.test(t)){
-       $('#t').focus();
+     if(!t||!/^\d{7,9}$/.test(t)){
+       $('#cli_tel').focus();
        return toast('Ingresa un teléfono válido de 7 a 9 dígitos.',1);
      }
      if(k==='CLIENTE' && (!d || !/^(\d{8}|\d{11})$/.test(d))) {
-       $('#d').focus();
+       $('#cli_doc').focus();
        return toast('Un cliente formal exige DNI (8 dígitos) o RUC (11 dígitos). Escribiste: ' + (d ? `"${d}" (${d.length} dígitos)` : 'vacío') + '.', 1);
      }
      try {
@@ -394,8 +398,12 @@ function bind(v){bindX(v);
        });
        const dres = await res.json();
        if(!dres.ok) return toast(dres.error || 'Error al guardar cliente', 1);
-     } catch(e){}
-     D.cli.push({d:d||'-',n,t,em:em||'-',k});save();go('cli',d);toast('Cliente registrado con éxito.');
+       toast('Cliente registrado con éxito.');
+       $('#cli_doc').value=''; $('#cli_nom').value=''; $('#cli_tel').value=''; $('#cli_em').value='';
+       await loadCli();
+     } catch(e){
+       toast('Error de conexión al guardar cliente', 1);
+     }
    };
  }
 }
