@@ -63,7 +63,7 @@ cli:[{d:'45871236',n:'María Quispe',t:'987654321',k:'Cliente'},{d:'20601234567'
 ped:[{id:'P-001',c:'María Quispe',d:'Sofá a medida en chenille',st:1,f:'2026-11-05'}],mov:[]});
 let D=JSON.parse(S.get('dl_admin')||'null')||seed();const save=()=>S.set('dl_admin',JSON.stringify(D));
 let view='dash';
-function toast(m,bad){const t=$('#t');t.textContent=m;t.className='toast show'+(bad?' bad':'');clearTimeout(toast.h);toast.h=setTimeout(()=>t.className='toast',2800)}
+function toast(m,bad){const t=$('#t');t.textContent=m;t.className='toast show'+(bad?' bad':'');clearTimeout(toast.h);toast.h=setTimeout(()=>t.className='toast',4500)}
 // Login (R-01 y RF-45: autenticación contra usuario de MySQL)
 $('#lf').onsubmit=async e=>{
   e.preventDefault();
@@ -205,7 +205,14 @@ async function loadCli(){
     }
   } catch(e) {}
   const tb = $('#tb_cli');
-  if(tb) tb.innerHTML = D.cli.map(c=>`<tr data-k="${c.d}"><td>${c.d}</td><td>${esc(c.n)}</td><td>${esc(c.t)}</td><td>${esc(c.em||'-')}</td><td>${tag(c.k,c.k==='CLIENTE'?'':'w')}</td></tr>`).join('');
+  if(tb) {
+    tb.innerHTML = D.cli.map(c=>{
+      const esFormal = (c.k === 'CLIENTE' || c.k === 'Cliente');
+      const etiqueta = esFormal ? 'Cliente formal' : 'Potencial cliente';
+      const clase = esFormal ? '' : 'w';
+      return `<tr data-k="${c.d}"><td>${c.d}</td><td>${esc(c.n)}</td><td>${esc(c.t)}</td><td>${esc(c.em||'-')}</td><td>${tag(etiqueta, clase)}</td></tr>`;
+    }).join('');
+  }
 }
 async function loadPed(){
   const mapSt = s => {
@@ -327,7 +334,7 @@ function bind(v){bindX(v);
        p.s += (t==='Entrada'?q:-q);
      }
      D.mov.push({f:new Date().toLocaleString('es-PE'),c:p.c,t,q});save();go('inv',p.c);
-     toast(t+' registrada en MySQL. '+(p.s<=p.m?'Atención: stock bajo.':'Stock actualizado.'),p.s<=p.m);
+     toast(t+' registrada. '+(p.s<=p.m?'Atención: stock bajo.':'Stock actualizado.'),p.s<=p.m);
    };
    $('#add').onclick=async()=>{
      const c=$('#c').value.trim().toUpperCase(),n=$('#n').value.trim(),u=$('#u').value,p=$('#p').value,m=$('#m').value,ln=$('#ln').value,cat=$('#cat').value.trim()||'General';
@@ -341,7 +348,7 @@ function bind(v){bindX(v);
        const d = await res.json();
        if(!d.ok) return toast(d.error || 'Error al guardar', 1);
      } catch(e){}
-     D.prod.push({c,n,cat,u,p:+p,s:0,m:+m});save();go('inv',c);toast('Producto guardado en MySQL con éxito.');
+     D.prod.push({c,n,cat,u,p:+p,s:0,m:+m});save();go('inv',c);toast('Producto guardado con éxito.');
    };
  }
  if(v==='ped'){
@@ -360,15 +367,25 @@ function bind(v){bindX(v);
        const dres = await res.json();
        if(dres.ok && dres.numero) idGenerado = dres.numero;
      } catch(e){}
-     D.ped.push({id:idGenerado,c:cliNombre,d,st:0,f:fEntrega});save();go('ped',idGenerado);toast('Pedido registrado en MySQL exitosamente.');
+     D.ped.push({id:idGenerado,c:cliNombre,d,st:0,f:fEntrega});save();go('ped',idGenerado);toast('Pedido registrado con éxito.');
    };
  }
  if(v==='cli'){
    loadCli();
    $('#add').onclick=async()=>{
      const d=$('#d').value.trim(),n=$('#n').value.trim(),t=$('#t').value.trim(),em=$('#em').value.trim(),k=$('#k').value;
-     if(!n||!/^\d{7,9}$/.test(t))return toast('Ingresa el nombre y un teléfono válido (7 a 9 dígitos).',1);
-     if(k==='CLIENTE' && (!d || !/^(\d{8}|\d{11})$/.test(d))) return toast('Un cliente formal exige DNI (8 dígitos) o RUC (11 dígitos).',1);
+     if(!n){
+       $('#n').focus();
+       return toast('Ingresa el nombre completo o razón social.',1);
+     }
+     if(!/^\d{7,9}$/.test(t)){
+       $('#t').focus();
+       return toast('Ingresa un teléfono válido de 7 a 9 dígitos.',1);
+     }
+     if(k==='CLIENTE' && (!d || !/^(\d{8}|\d{11})$/.test(d))) {
+       $('#d').focus();
+       return toast('Un cliente formal exige DNI (8 dígitos) o RUC (11 dígitos). Escribiste: ' + (d ? `"${d}" (${d.length} dígitos)` : 'vacío') + '.', 1);
+     }
      try {
        const res = await fetch('/api/clientes', {
          method: 'POST',
@@ -378,7 +395,7 @@ function bind(v){bindX(v);
        const dres = await res.json();
        if(!dres.ok) return toast(dres.error || 'Error al guardar cliente', 1);
      } catch(e){}
-     D.cli.push({d:d||'-',n,t,em:em||'-',k});save();go('cli',d);toast('Cliente registrado en MySQL con éxito.');
+     D.cli.push({d:d||'-',n,t,em:em||'-',k});save();go('cli',d);toast('Cliente registrado con éxito.');
    };
  }
 }
