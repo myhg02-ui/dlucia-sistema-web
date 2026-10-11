@@ -57,10 +57,29 @@ const $=s=>document.querySelector(s),ST=['Registrado','En fabricación','Listo p
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let mem={};const S={get:k=>{try{return localStorage.getItem(k)}catch(e){return mem[k]}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){mem[k]=v}}};
 const seed=()=>({prod:[
-{c:'MU-001',n:'Sofá 3 cuerpos',cat:'Muebles',u:'und',p:1250,s:6,m:3},{c:'CO-001',n:'Colchón 2 plazas',cat:'Colchones',u:'und',p:780,s:2,m:3},
-{c:'TE-001',n:'Tela chenille',cat:'Tapicería',u:'m',p:28,s:40,m:50},{c:'ES-001',n:'Espuma D20',cat:'Tapicería',u:'plancha',p:95,s:12,m:5}],
-cli:[{d:'45871236',n:'María Quispe',t:'987654321',k:'Cliente'},{d:'20601234567',n:'Tapicería Los Andes',t:'955123456',k:'Cliente'}],
-ped:[{id:'P-001',c:'María Quispe',d:'Sofá a medida en chenille',st:1,f:'2026-11-05'}],mov:[]});
+{c:'MU-001',n:'Sofá 3 cuerpos terciopelo',cat:'Salas',u:'und',p:1249,s:6,m:3},
+{c:'MU-002',n:'Sillón individual nórdico',cat:'Salas',u:'und',p:650,s:4,m:2},
+{c:'CA-001',n:'Cama con cabecera tapizada',cat:'Descanso',u:'und',p:980,s:3,m:2},
+{c:'CO-001',n:'Colchón ortopédico 2 plazas',cat:'Descanso',u:'und',p:780,s:5,m:3},
+{c:'CB-001',n:'Cabecera capitoné a medida',cat:'A medida',u:'und',p:420,s:4,m:2},
+{c:'MU-003',n:'Sofá seccional modular',cat:'Salas',u:'und',p:1890,s:3,m:2},
+{c:'TE-001',n:'Tela terciopelo verde bosque',cat:'Telas',u:'m',p:28,s:45,m:20},
+{c:'ES-001',n:'Espuma zebra D20 (plancha)',cat:'Espumas',u:'plancha',p:95,s:2,m:5}],
+cli:[
+{d:'90009911',n:'Andre Mateo Romero',t:'952999569',em:'andre.mateo@gmail.com',k:'CLIENTE'},
+{d:'45871236',n:'María Quispe Huamán',t:'987654321',em:'maria.quispe@gmail.com',k:'CLIENTE'},
+{d:'20601234567',n:'Tapicería Los Andes S.A.C.',t:'955123456',em:'contacto@tapicerialosandes.pe',k:'CLIENTE'},
+{d:'-',n:'Juan Pérez Alva',t:'988776655',em:'juan.perez@hotmail.com',k:'POTENCIAL'}],
+ped:[
+{id:'PED-1001',c:'Andre Mateo Romero',d:'Sofá 3 cuerpos terciopelo verde bosque con patas de madera cedro',st:0,f:'2026-10-22'},
+{id:'PED-1002',c:'María Quispe Huamán',d:'Juego de cama con cabecera capitoné tapizada en lino gris',st:1,f:'2026-10-18'},
+{id:'PED-1003',c:'Tapicería Los Andes S.A.C.',d:'Lote de 10 planchas de espuma zebra D20 y 30m de tela chenille',st:2,f:'2026-10-14'},
+{id:'PED-1004',c:'Juan Pérez Alva',d:'Sillón individual nórdico en tela color mostaza',st:3,f:'2026-10-12'}],
+mov:[
+{f:'11/10/2026, 08:30:00',c:'TE-001',t:'Entrada',q:45},
+{f:'11/10/2026, 09:15:00',c:'ES-001',t:'Salida',q:8},
+{f:'11/10/2026, 10:00:00',c:'MU-001',t:'Entrada',q:3}]});
+if(S.get('dl_ver')!=='v2_presentacion'){try{localStorage.removeItem('dl_admin');S.set('dl_ver','v2_presentacion')}catch(e){}}
 let D=JSON.parse(S.get('dl_admin')||'null')||seed();const save=()=>S.set('dl_admin',JSON.stringify(D));
 let view='dash';
 function toast(m,bad){const t=$('#toast_box');t.textContent=m;t.className='toast show'+(bad?' bad':'');clearTimeout(toast.h);toast.h=setTimeout(()=>t.className='toast',4500)}
