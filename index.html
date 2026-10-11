@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>D'Lucia Muebles y Decoraciones E.I.R.L. | Muebles, colchones y tapicería</title>
+<meta name="description" content="Muebles, camas y colchones, y materiales para tapicería. Tiendas en Lima y Ayacucho.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Hanken+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#17201d;--velvet:#1f3a34;--velvet2:#2b4d45;--brass:#b08d57;--bg:#f4f5f2;--alt:#e9ece7;--line:#d3d8d1;--r:6px}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth;scroll-padding-top:76px}
+body{font:17px/1.65 "Hanken Grotesk",system-ui,sans-serif;color:var(--ink);background:var(--bg)}
+h1,h2,h3{font-family:Fraunces,Georgia,serif;font-weight:600;line-height:1.15;letter-spacing:-.01em}
+h1{font-size:clamp(2.2rem,5vw,3.8rem)}h2{font-size:clamp(1.7rem,3.4vw,2.5rem);margin-bottom:.6rem}h3{font-size:1.3rem;margin-bottom:.5rem}
+p{max-width:62ch}a{color:inherit}
+:focus-visible{outline:3px solid var(--brass);outline-offset:3px}
+.skip{position:absolute;left:-999px}.skip:focus{left:8px;top:8px;background:#fff;padding:8px;z-index:99}
+.wrap{max-width:1120px;margin:auto;padding:0 24px}
+.nav{position:sticky;top:0;z-index:50;display:flex;justify-content:space-between;align-items:center;padding:12px 24px;background:rgba(244,245,242,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;font-family:Fraunces,serif;font-weight:600;font-size:1.2rem;line-height:1.1}
+.brand small{display:block;font:500 .72rem "Hanken Grotesk",sans-serif;color:#55625d}
+.mark{display:grid;place-items:center;width:40px;height:40px;background:var(--velvet);color:var(--brass);border-radius:50%;font-size:1.25rem}
+#menu{display:flex;align-items:center;gap:26px}#menu a{text-decoration:none;font-weight:500}#menu a:not(.btn):hover{color:var(--brass)}
+.burger{display:none;background:none;border:0;width:44px;height:44px;cursor:pointer}
+.burger span{display:block;height:2px;background:var(--ink);margin:6px 10px}
+.btn{display:inline-block;background:var(--velvet);color:#fff!important;padding:13px 26px;border-radius:var(--r);border:0;font:700 1rem "Hanken Grotesk",sans-serif;text-decoration:none;cursor:pointer;transition:background .2s}
+.btn:hover{background:var(--velvet2)}.btn-sm{padding:9px 18px}
+.btn-ghost{background:transparent;color:var(--ink)!important;box-shadow:inset 0 0 0 2px var(--ink)}.btn-ghost:hover{background:var(--ink);color:#fff!important}
+.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center;max-width:1120px;margin:auto;padding:72px 24px 40px}
+.hero-copy p{margin:22px 0 30px;font-size:1.15rem}.actions{display:flex;gap:14px;flex-wrap:wrap}
+.hero-art{position:relative;aspect-ratio:1/1.05;border-radius:var(--r);overflow:hidden;background:var(--velvet);animation:rise .9s ease both}
+.tuft{position:absolute;inset:0;background:
+radial-gradient(circle at 50% 50%,var(--brass) 0 5px,transparent 6px) 0 0/64px 64px,
+radial-gradient(circle at 0 0,var(--brass) 0 5px,transparent 6px) 0 0/64px 64px,
+linear-gradient(45deg,transparent 48%,rgba(0,0,0,.28) 49% 51%,transparent 52%) 0 0/64px 64px,
+linear-gradient(-45deg,transparent 48%,rgba(0,0,0,.28) 49% 51%,transparent 52%) 0 0/64px 64px,
+radial-gradient(circle at 50% 50%,rgba(255,255,255,.14),transparent 70%) 32px 32px/64px 64px,var(--velvet)}
+.tag{position:absolute;left:20px;bottom:20px;background:var(--bg);padding:8px 16px;border-radius:var(--r);font-weight:700;font-size:.9rem}
+@keyframes rise{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+.facts{grid-column:1/-1;list-style:none;display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);padding-top:24px;gap:16px;color:#46534e}
+.facts strong{font:600 2rem Fraunces,serif;color:var(--velvet);margin-right:8px}
+.section{padding:84px 0}.alt{background:var(--alt)}.lead{color:#46534e;margin-bottom:36px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:24px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:36px;margin-top:32px}
+.card{background:#fff;padding:36px;border-radius:var(--r);border:1px solid var(--line)}
+.card.dark{background:var(--velvet);color:#eef2ef;border-color:var(--velvet)}
+.chips{list-style:none;display:flex;flex-wrap:wrap;gap:8px;margin-top:22px;padding:0}
+.chips li{padding:5px 13px;border-radius:99px;border:1px solid currentColor;font-size:.9rem;opacity:.85}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start}.split p+p{margin-top:14px}
+.mv{display:grid;gap:28px}.mv>div{border-left:3px solid var(--brass);padding-left:22px}
+.steps{list-style:none;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:0;position:relative}
+.steps li{position:relative;padding-top:26px}
+.steps li::before{content:"";position:absolute;top:8px;left:0;right:0;height:3px;background:var(--line)}
+.steps li:has(.on)::before,.steps li:has(.done)::before{background:var(--brass)}
+.steps button{background:none;border:0;font:700 1rem "Hanken Grotesk",sans-serif;cursor:pointer;color:#55625d;padding:6px 0;text-align:left}
+.steps button.on,.steps button.done{color:var(--ink)}
+.step-text{margin-top:28px;padding:22px 26px;background:#fff;border-left:3px solid var(--brass);border-radius:var(--r);min-height:92px}
+.grid3 article{border-top:2px solid var(--velvet);padding-top:18px}
+.contact{background:var(--velvet);color:#eef2ef}
+form{display:grid;gap:16px}label{display:grid;gap:6px;font-weight:500;font-size:.95rem}
+input,select,textarea{font:inherit;padding:12px 14px;border-radius:var(--r);border:1px solid transparent;background:#f4f5f2;color:var(--ink)}
+input.bad{border-color:#ffb4a8;background:#fff3f0}
+.contact .btn{background:var(--brass);color:#17201d!important}.contact .btn:hover{background:#c49f69}
+.msg{min-height:1.5em;font-weight:500}
+footer{padding:28px 24px;text-align:center;font-size:.9rem;color:#55625d}footer p{margin:auto}
+@media(max-width:860px){
+.hero,.split,.grid2,.grid3{grid-template-columns:1fr}.hero{padding-top:40px}.hero-art{aspect-ratio:16/10}
+.facts{grid-template-columns:1fr}.steps{grid-template-columns:1fr 1fr;row-gap:12px}.section{padding:60px 0}
+.burger{display:block}#menu{display:none;position:absolute;top:100%;left:0;right:0;flex-direction:column;align-items:flex-start;padding:20px 24px;background:var(--bg);border-bottom:1px solid var(--line)}
+#menu.open{display:flex}}
+.rv{opacity:0;transform:translateY(28px);transition:opacity .7s ease,transform .7s ease}.rv.in{opacity:1;transform:none}
+.card,.grid3 article{transition:transform .3s,box-shadow .3s}.card:hover,.grid3 article:hover{transform:translateY(-6px);box-shadow:0 16px 32px rgba(23,32,29,.14)}
+.tuft{animation:drift 14s linear infinite}@keyframes drift{to{background-position:64px 64px,64px 64px,64px 64px,64px 64px,96px 96px,0 0}}
+.nav.sc{box-shadow:0 4px 18px rgba(0,0,0,.08)}.facts strong{display:inline-block;min-width:1.2ch}
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:28px}
+.filters button{border:1.5px solid var(--ink);background:none;padding:8px 20px;border-radius:99px;font:700 .95rem "Hanken Grotesk",sans-serif;cursor:pointer;transition:.2s}
+.filters button:hover,.filters button.on{background:var(--ink);color:#fff}
+.cat .item{border-top:0;padding:0;background:#fff;border-radius:var(--r);overflow:hidden;border:1px solid var(--line);display:flex;flex-direction:column;animation:pop .45s ease both}
+.cat{gap:24px}.item h3,.item p,.item .link{margin-left:22px;margin-right:22px}.item p{flex:1;font-size:.97rem}.item h3{margin-top:18px}
+.fig{background:linear-gradient(160deg,#dfe4dc,#c9d1c7);padding:18px 24px;--f:var(--velvet)}.fig svg{width:100%;height:auto;display:block;transition:transform .5s}
+.item:hover .fig svg{transform:scale(1.07) translateY(-3px)}.item:nth-child(2) .fig{--f:#25506b}.item:nth-child(3) .fig{--f:#6e2a3a}.item:nth-child(5) .fig{--f:#7d8582}.item:nth-child(6) .fig{--f:#b58a2e}
+.link{background:none;border:0;font:700 1rem "Hanken Grotesk",sans-serif;color:var(--velvet);cursor:pointer;text-align:left;padding:0 0 22px;margin-top:14px}.link:hover{color:var(--brass)}
+.item.hide{display:none}@keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+.stage{background:linear-gradient(160deg,#dfe4dc,#c4cdc1);border-radius:var(--r);padding:36px;transition:.3s}.stage svg{width:100%;height:auto;display:block;filter:drop-shadow(0 18px 14px rgba(0,0,0,.2))}
+.sw{display:flex;gap:14px;margin:24px 0 10px;flex-wrap:wrap}.sw button{width:46px;height:46px;border-radius:50%;background:var(--c);border:3px solid var(--bg);box-shadow:0 0 0 1.5px var(--line);cursor:pointer;transition:transform .2s}
+.sw button:hover{transform:scale(1.12)}.sw button.on{box-shadow:0 0 0 3px var(--brass)}.swn{margin-bottom:22px}
+.dk{background:var(--velvet);color:#eef2ef}.dk .lead{color:#b9c6c0}
+.flow{list-style:none;padding:0;display:grid;grid-template-columns:repeat(5,1fr);gap:20px;counter-reset:s;margin-top:34px}
+.flow li{counter-increment:s;border-top:2px solid var(--brass);padding-top:16px}.flow li::before{content:counter(s);display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--brass);color:var(--ink);font-weight:700;margin-bottom:12px}
+.flow b{display:block;font:600 1.15rem Fraunces,serif;margin-bottom:6px}.flow span{font-size:.93rem;color:#c5d0cb;display:block}
+@media(max-width:860px){.flow{grid-template-columns:1fr 1fr}}
+[hidden]{display:none!important}
+.pbar{background:var(--brass);color:#17201d;text-align:center;padding:9px 16px;font-weight:700;font-size:.92rem}.pbar a{text-decoration:none}.pbar span{display:inline-block;animation:pop .5s ease}
+.pr{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:var(--r);padding:28px;transition:transform .3s}.pr:hover{transform:translateY(-6px)}
+.grid3 .pr{border-top:1px solid rgba(255,255,255,.15)}.pc{display:block;font:600 3rem Fraunces,serif;color:var(--brass);line-height:1}.pr h3{margin:12px 0 6px}.pr p{color:#c5d0cb;margin-bottom:14px}
+.cd{display:block;font-weight:700;font-size:.9rem;margin-bottom:18px;color:#eef2ef}.pr .btn{background:var(--brass);color:#17201d!important}
+.fig{overflow:hidden}.fig:has(img){padding:0}.fig img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;transition:transform .6s}.item:hover .fig img{transform:scale(1.06)}
+.item .pr-p{flex:0!important;font-weight:700;color:var(--velvet);margin-top:8px}
+details{border-bottom:1px solid var(--line);padding:18px 0;max-width:820px}summary{cursor:pointer;font:600 1.1rem Fraunces,serif;list-style:none;display:flex;justify-content:space-between;gap:16px}
+summary::-webkit-details-marker{display:none}summary::after{content:"+";color:var(--brass);font-size:1.6rem;line-height:1;transition:transform .3s}details[open] summary::after{transform:rotate(45deg)}details p{margin-top:10px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;scroll-behavior:auto}.rv{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Saltar al contenido</a>
+
+<div class="pbar" id="pb" hidden></div>
+<header class="nav" id="nav">
+  <a class="brand" href="#inicio" aria-label="D'Lucia, inicio"><span class="mark">D</span><span>D'Lucia<small>Muebles y Decoraciones</small></span></a>
+  <button class="burger" id="burger" aria-label="Abrir menú" aria-expanded="false"><span></span><span></span></button>
+  <nav id="menu" aria-label="Principal">
+    <a href="#promos" id="npromo" hidden>Promociones</a>
+    <a href="#catalogo">Catálogo</a>
+    <a href="#taller">Taller</a>
+    <a href="#nosotros">Nosotros</a>
+    <a href="#pedidos">Tu pedido</a>
+    <a href="#tiendas">Tiendas</a>
+    <a href="admin.html">Administrador</a>
+    <a class="btn btn-sm" href="#contacto">Cotizar</a>
+  </nav>
+</header>
+
+<main id="main">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="sofa" viewBox="0 0 200 130"><rect x="24" y="22" width="152" height="52" rx="16" fill="var(--f)"/><rect x="6" y="52" width="34" height="58" rx="14" fill="var(--f)"/><rect x="160" y="52" width="34" height="58" rx="14" fill="var(--f)"/><rect x="30" y="66" width="140" height="38" rx="10" fill="var(--f)"/><path d="M100 66v38" stroke="rgba(0,0,0,.25)" stroke-width="2"/><rect x="6" y="52" width="34" height="58" rx="14" fill="rgba(0,0,0,.12)"/><rect x="160" y="52" width="34" height="58" rx="14" fill="rgba(0,0,0,.12)"/><rect x="22" y="108" width="8" height="14" rx="2" fill="#5a4330"/><rect x="170" y="108" width="8" height="14" rx="2" fill="#5a4330"/></symbol>
+<symbol id="chair" viewBox="0 0 200 130"><rect x="55" y="16" width="90" height="62" rx="18" fill="var(--f)"/><rect x="38" y="52" width="30" height="56" rx="13" fill="var(--f)"/><rect x="132" y="52" width="30" height="56" rx="13" fill="var(--f)"/><rect x="38" y="52" width="30" height="56" rx="13" fill="rgba(0,0,0,.12)"/><rect x="132" y="52" width="30" height="56" rx="13" fill="rgba(0,0,0,.12)"/><rect x="62" y="68" width="76" height="36" rx="10" fill="var(--f)"/><rect x="54" y="106" width="7" height="16" rx="2" fill="#5a4330"/><rect x="139" y="106" width="7" height="16" rx="2" fill="#5a4330"/></symbol>
+<symbol id="bed" viewBox="0 0 200 130"><rect x="22" y="14" width="156" height="62" rx="10" fill="var(--f)"/><rect x="10" y="66" width="180" height="38" rx="8" fill="#efe9dd"/><rect x="22" y="56" width="62" height="18" rx="8" fill="#fff"/><rect x="116" y="56" width="62" height="18" rx="8" fill="#fff"/><rect x="10" y="84" width="180" height="20" rx="6" fill="var(--f)" opacity=".85"/><rect x="14" y="104" width="9" height="16" fill="#5a4330"/><rect x="177" y="104" width="9" height="16" fill="#5a4330"/></symbol>
+<symbol id="matt" viewBox="0 0 200 130"><rect x="12" y="38" width="176" height="52" rx="10" fill="#f3efe6" stroke="#bdb6a6" stroke-width="2"/><path d="M12 52h176M12 76h176" stroke="#d6cfbf" stroke-width="2"/><g fill="#bdb6a6"><circle cx="50" cy="64" r="3"/><circle cx="100" cy="64" r="3"/><circle cx="150" cy="64" r="3"/></g><rect x="12" y="90" width="176" height="10" rx="4" fill="var(--f)"/></symbol>
+<symbol id="head" viewBox="0 0 200 130"><rect x="20" y="16" width="160" height="92" rx="12" fill="var(--f)"/><g fill="#d9bd88"><circle cx="50" cy="40" r="4"/><circle cx="100" cy="40" r="4"/><circle cx="150" cy="40" r="4"/><circle cx="75" cy="70" r="4"/><circle cx="125" cy="70" r="4"/><circle cx="50" cy="96" r="4"/><circle cx="100" cy="96" r="4"/><circle cx="150" cy="96" r="4"/></g><path d="M50 40l25 30 25-30 25 30 25-30M50 96l25-26 25 26 25-26 25 26" stroke="rgba(0,0,0,.25)" fill="none"/></symbol>
+<symbol id="cust" viewBox="0 0 200 130"><use href="#sofa" opacity=".35"/><g stroke="#b08d57" stroke-width="2.5" fill="none"><path d="M6 124h188M6 118v12M194 118v12M200 22v90M194 22h12M194 112h12" stroke-dasharray="0"/></g></symbol>
+</defs></svg>
+<section class="hero" id="inicio">
+  <div class="hero-copy">
+    <h1>Muebles y materiales de tapicería para un hogar bien hecho</h1>
+    <p>Vendemos muebles, camas y colchones, y abastecemos de telas, espumas y rellenos a tapiceros y fabricantes. Fabricamos a medida en nuestro propio taller.</p>
+    <div class="actions">
+      <a class="btn" href="#contacto">Pedir cotización</a>
+      <a class="btn btn-ghost" href="#lineas">Ver líneas de negocio</a>
+    </div>
+  </div>
+  <div class="hero-art" aria-hidden="true"><div class="tuft"></div><div class="tag">Hecho en nuestro taller</div></div>
+  <ul class="facts">
+    <li><strong>2</strong> tiendas: Lima y Ayacucho</li>
+    <li><strong>2</strong> líneas: mueblería y tapicería</li>
+    <li><strong>11</strong> colaboradores, del casco al tapizado</li>
+  </ul>
+</section>
+
+<section class="section dk" id="promos" hidden>
+  <div class="wrap">
+    <h2>Promociones vigentes</h2>
+    <p class="lead">Aprovecha antes de que termine el plazo.</p>
+    <div class="grid3" id="pg"></div>
+  </div>
+</section>
+
+<section class="section" id="lineas">
+  <div class="wrap">
+    <h2>Dos líneas, un mismo estándar</h2>
+    <p class="lead">Atendemos tanto a quien amuebla su casa como a quien vive de tapizar.</p>
+    <div class="grid2">
+      <article class="card">
+        <h3>Muebles, camas y colchones</h3>
+        <p>Para el hogar: salas, descanso y decoración, con atención personalizada y entrega a la dirección que indiques.</p>
+        <ul class="chips"><li>Muebles</li><li>Camas</li><li>Colchones</li><li>Pedidos personalizados</li></ul>
+      </article>
+      <article class="card dark">
+        <h3>Materiales para tapicería</h3>
+        <p>Insumos para fabricar o reparar mobiliario. Una línea nueva pensada para tapiceros, fabricantes y clientes finales.</p>
+        <ul class="chips"><li>Telas</li><li>Espumas</li><li>Patas para muebles</li><li>Cojines</li><li>Rellenos</li><li>Napa</li><li>Algodón</li></ul>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section alt" id="catalogo">
+  <div class="wrap">
+    <h2>Lo que fabricamos y vendemos</h2>
+    <p class="lead">Una muestra de nuestras líneas. Cada pieza puede hacerse a tus medidas, con la tela y el acabado que elijas.</p>
+    <div class="filters" id="filters" role="group" aria-label="Filtrar catálogo">
+      <button class="on" data-f="all">Todos</button><button data-f="salas">Salas</button><button data-f="descanso">Descanso</button><button data-f="medida">A medida</button>
+    </div>
+    <div class="grid3 cat" id="cat">
+      <article class="item" data-cat="salas medida"><div class="fig"><svg viewBox="0 0 200 130"><use href="#sofa"/></svg></div><h3>Sofás</h3><p>De dos y tres cuerpos, con casco armado en nuestro taller y tapizado a tu elección.</p><button class="link" data-q="un sofá">Cotizar</button></article>
+      <article class="item" data-cat="salas medida"><div class="fig"><svg viewBox="0 0 200 130"><use href="#chair"/></svg></div><h3>Sillones</h3><p>Individuales para sala, dormitorio o recepción, en la tela y el color que prefieras.</p><button class="link" data-q="un sillón">Cotizar</button></article>
+      <article class="item" data-cat="descanso"><div class="fig"><svg viewBox="0 0 200 130"><use href="#bed"/></svg></div><h3>Camas</h3><p>Camas con cabecera tapizada para el descanso de toda la familia.</p><button class="link" data-q="una cama">Cotizar</button></article>
+      <article class="item" data-cat="descanso"><div class="fig"><svg viewBox="0 0 200 130"><use href="#matt"/></svg></div><h3>Colchones</h3><p>Colchones para cada tipo de cama, con atención personalizada para elegir el correcto.</p><button class="link" data-q="un colchón">Cotizar</button></article>
+      <article class="item" data-cat="descanso medida"><div class="fig"><svg viewBox="0 0 200 130"><use href="#head"/></svg></div><h3>Cabeceras tapizadas</h3><p>Diseños capitoné o lisos, hechos a la medida de tu cama.</p><button class="link" data-q="una cabecera tapizada">Cotizar</button></article>
+      <article class="item" data-cat="medida"><div class="fig"><svg viewBox="0 0 200 130"><use href="#cust"/></svg></div><h3>Pedido personalizado</h3><p>Nos indicas medidas, tela y acabados, y el taller lo fabrica con fecha de entrega acordada.</p><button class="link" data-q="un mueble a medida">Cotizar</button></article>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="telas">
+  <div class="wrap split">
+    <div class="stage" style="--f:#1f3a34"><svg id="prev" viewBox="0 0 200 130" role="img" aria-label="Sofá con la tela elegida"><use href="#sofa"/></svg></div>
+    <div>
+      <h2>Elige la tela de tu sofá</h2>
+      <p>Prueba colores y mira cómo queda. Los tonos son referenciales: en tienda te mostramos las telas disponibles.</p>
+      <div class="sw" id="sw" role="group" aria-label="Colores de tela">
+        <button class="on" style="--c:#1f3a34" data-n="Verde terciopelo" aria-label="Verde terciopelo"></button>
+        <button style="--c:#25506b" data-n="Azul petróleo" aria-label="Azul petróleo"></button>
+        <button style="--c:#7d8582" data-n="Gris humo" aria-label="Gris humo"></button>
+        <button style="--c:#c8b79a" data-n="Arena" aria-label="Arena"></button>
+        <button style="--c:#6e2a3a" data-n="Vino" aria-label="Vino"></button>
+        <button style="--c:#b58a2e" data-n="Mostaza" aria-label="Mostaza"></button>
+      </div>
+      <p class="swn">Tela elegida: <strong id="swn">Verde terciopelo</strong></p>
+      <button class="btn" id="quoteSofa">Cotizar con esta tela</button>
+    </div>
+  </div>
+</section>
+
+<section class="section alt" id="nosotros">
+  <div class="wrap split">
+    <div>
+      <h2>Quiénes somos</h2>
+      <p>D'Lucia Muebles y Decoraciones E.I.R.L. comercializa muebles, camas y colchones en tiendas físicas de Lima y Ayacucho. Hoy suma una unidad de negocio de materiales para tapicería, y con ella un taller donde casqueros, maestros tapiceros y costurera dan forma a cada pedido.</p>
+      <p>Gerencia, administración, ventas, producción y logística trabajan en equipo para que cada mueble llegue como se prometió.</p>
+    </div>
+    <div class="mv">
+      <div><h3>Misión</h3><p>Ofrecer soluciones integrales para el confort y la decoración del hogar con muebles y colchones de calidad, y abastecer de materiales de tapicería a fabricantes y clientes finales, con variedad, atención personalizada y excelencia en el servicio.</p></div>
+      <div><h3>Visión</h3><p>Ser una empresa referente a nivel local en mobiliario y distribución de materiales para tapicería, destacando por su eficiencia operativa, variedad de catálogo e innovación en la gestión comercial.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="section dk" id="taller">
+  <div class="wrap">
+    <h2>Cómo se fabrica un mueble D'Lucia</h2>
+    <p class="lead">Todo ocurre en nuestro taller, con maestros tapiceros, casqueros y costurera.</p>
+    <ol class="flow">
+      <li><b>Armado del casco</b><span>Los casqueros construyen la estructura del mueble.</span></li>
+      <li><b>Corte</b><span>Se cortan telas y espumas según las medidas del pedido.</span></li>
+      <li><b>Costura</b><span>La costurera confecciona fundas y piezas de tela.</span></li>
+      <li><b>Tapizado</b><span>Se colocan espumas y rellenos, se tapiza y se instalan los accesorios.</span></li>
+      <li><b>Inspección</b><span>Revisamos medidas, costura, tapizado y acabado antes de guardarlo.</span></li>
+    </ol>
+  </div>
+</section>
+
+<section class="section" id="pedidos">
+  <div class="wrap">
+    <h2>Así avanza tu pedido</h2>
+    <p class="lead">Cada pedido pasa por cuatro estados. Toca uno para ver qué significa.</p>
+    <ol class="steps" id="steps">
+      <li><button class="on" data-i="0">Registrado</button></li>
+      <li><button data-i="1">En fabricación</button></li>
+      <li><button data-i="2">Listo para entrega</button></li>
+      <li><button data-i="3">Entregado</button></li>
+    </ol>
+    <p class="step-text" id="stepText" aria-live="polite"></p>
+  </div>
+</section>
+
+<section class="section alt" id="servicios">
+  <div class="wrap">
+    <h2>Del taller a tu sala</h2>
+    <div class="grid3">
+      <article><h3>Fabricación a medida</h3><p>Indicas medidas, tela y acabados. El taller arma el casco, corta, cose y tapiza según tu orden.</p></article>
+      <article><h3>Stock real</h3><p>Controlamos entradas y salidas de inventario para informarte con exactitud qué hay disponible.</p></article>
+      <article><h3>Entrega coordinada</h3><p>Acordamos fecha, hora y dirección, y cerramos el pedido con tu conformidad de recepción.</p></article>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="tiendas">
+  <div class="wrap">
+    <h2>Nuestras tiendas</h2>
+    <div class="grid2">
+      <article class="card"><h3>Lima</h3><p>Tienda física con muebles, camas, colchones y materiales para tapicería.</p></article>
+      <article class="card"><h3>Ayacucho</h3><p>Tienda física con atención personalizada y consulta de disponibilidad por producto.</p></article>
+    </div>
+  </div>
+</section>
+
+<section class="section alt" id="faq">
+  <div class="wrap">
+    <h2>Preguntas frecuentes</h2>
+    <details><summary>¿Fabrican muebles a medida?</summary><p>Sí. Nos indicas medidas, tela y acabados, y el taller fabrica tu mueble. El pedido se confirma con las especificaciones completas, la fecha de entrega acordada y un adelanto.</p></details>
+    <details><summary>¿Cómo sé en qué estado está mi pedido?</summary><p>Cada pedido pasa por cuatro estados: registrado, en fabricación, listo para entrega y entregado. Tu vendedor puede informarte el estado en cualquier momento.</p></details>
+    <details><summary>¿Venden materiales para tapicería?</summary><p>Sí: telas, espumas, patas para muebles, cojines, rellenos, napa y algodón, para tapiceros, fabricantes y clientes finales. No comercializamos madera.</p></details>
+    <details><summary>¿Cómo se realiza el pago?</summary><p>El pago se registra en tienda junto con su comprobante. Por ahora no procesamos pagos en línea.</p></details>
+    <details><summary>¿Dónde están sus tiendas?</summary><p>Tenemos tiendas físicas en Lima y en Ayacucho.</p></details>
+  </div>
+</section>
+
+<section class="section contact" id="contacto">
+  <div class="wrap split">
+    <div>
+      <h2>Pide tu cotización</h2>
+      <p>Cuéntanos qué necesitas y un asesor se pondrá en contacto contigo.</p>
+    </div>
+    <form id="form" novalidate>
+      <label>Nombre completo<input name="nombre" required autocomplete="name"></label>
+      <label>Teléfono<input name="tel" inputmode="numeric" required autocomplete="tel"></label>
+      <label>Correo electrónico<input name="mail" type="email" required autocomplete="email"></label>
+      <label>Línea de interés
+        <select name="linea"><option>Muebles, camas y colchones</option><option>Materiales para tapicería</option><option>Pedido personalizado</option></select>
+      </label>
+      <label>Mensaje<textarea name="msg" rows="3"></textarea></label>
+      <button class="btn" type="submit">Enviar solicitud</button>
+      <p class="msg" id="formMsg" role="status"></p>
+    </form>
+  </div>
+</section>
+</main>
+
+<footer>
+  <p>&copy; <span id="y"></span> D'Lucia Muebles y Decoraciones E.I.R.L. Lima y Ayacucho, Perú.</p>
+</footer>
+<script>
+const $=s=>document.querySelector(s);
+$('#y').textContent=new Date().getFullYear();
+
+// Menú móvil
+const burger=$('#burger'),menu=$('#menu');
+burger.addEventListener('click',()=>{const o=menu.classList.toggle('open');burger.setAttribute('aria-expanded',o)});
+menu.addEventListener('click',e=>{if(e.target.tagName==='A'){menu.classList.remove('open');burger.setAttribute('aria-expanded',false)}});
+
+// Estados del pedido
+const info=[
+ 'Registrado: tu pedido tiene sus datos, el precio vigente y, si es personalizado, medidas, tela y acabados confirmados.',
+ 'En fabricación: el taller arma el casco, corta, cose y tapiza tu mueble según la orden de producción.',
+ 'Listo para entrega: el mueble aprobó la inspección de calidad y espera la fecha y dirección acordadas.',
+ 'Entregado: recibiste el producto y diste tu conformidad. El pedido queda cerrado.'
+];
+const btns=[...document.querySelectorAll('#steps button')];
+function setStep(i){
+  btns.forEach((b,k)=>{b.classList.toggle('on',k===i);b.classList.toggle('done',k<i)});
+  $('#stepText').textContent=info[i];
+}
+btns.forEach((b,i)=>b.addEventListener('click',()=>setStep(i)));
+setStep(0);
+
+// Formulario con validación (DNI/teléfono/correo)
+$('#form').addEventListener('submit',e=>{
+  e.preventDefault();
+  const f=e.target,m=$('#formMsg');
+  const checks={nombre:v=>v.trim().length>=3,tel:v=>/^\d{7,9}$/.test(v.replace(/\s/g,'')),mail:v=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)};
+  let ok=true;
+  for(const k in checks){const bad=!checks[k](f[k].value);f[k].classList.toggle('bad',bad);if(bad)ok=false}
+  if(!ok){m.textContent='Revisa los campos marcados: nombre, teléfono de 7 a 9 dígitos y un correo válido.';return}
+  m.textContent='Solicitud lista. Conecta este formulario a tu backend o correo para recibirla.';
+  f.reset();
+});
+
+// Animaciones: aparición al hacer scroll, contadores y barra con sombra
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.15});
+document.querySelectorAll('.section .wrap>*,.facts li').forEach(el=>{el.classList.add('rv');io.observe(el)});
+document.querySelectorAll('.facts strong').forEach(el=>{const to=+el.textContent,t0=performance.now();(function f(t){const k=Math.min(1,(t-t0)/1400);el.textContent=Math.round(to*k);k<1&&requestAnimationFrame(f)})(t0)});
+addEventListener('scroll',()=>$('#nav').classList.toggle('sc',scrollY>10),{passive:true});
+
+
+// Contenido publicado desde el panel de administrador (clave dl_site)
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let site=null;try{site=JSON.parse(localStorage.getItem('dl_site'))}catch(e){}
+if(site){
+  if(site.hero){const a=$('.hero-art');a.style.background="url('"+site.hero+"') center/cover";a.querySelector('.tuft').hidden=true}
+  if(site.prod&&site.prod.length){
+    const sy=n=>/sill/i.test(n)?'chair':/cama/i.test(n)?'bed':/colch/i.test(n)?'matt':/cabec/i.test(n)?'head':/medida|personal/i.test(n)?'cust':'sofa';
+    $('#cat').innerHTML=site.prod.filter(p=>p.on).map(p=>`<article class="item" data-cat="${esc(p.cat)}"><div class="fig">${p.img?`<img src="${p.img}" alt="${esc(p.n)}" loading="lazy">`:`<svg viewBox="0 0 200 130"><use href="#${sy(p.n)}"/></svg>`}</div><h3>${esc(p.n)}</h3><p>${esc(p.d)}</p>${p.p?`<p class="pr-p">Desde S/ ${(+p.p).toFixed(2)}</p>`:''}<button class="link" data-q="${esc(p.n.toLowerCase())}">Cotizar</button></article>`).join('');
+  }
+  const act=(site.promo||[]).filter(x=>x.on&&(!x.u||new Date(x.u+'T23:59:59')>Date.now()));
+  if(act.length){
+    $('#promos').hidden=false;$('#npromo').hidden=false;
+    $('#pg').innerHTML=act.map(x=>`<article class="pr"><b class="pc">-${x.pc}%</b><h3>${esc(x.t)}</h3><p>${esc(x.d)}</p><span class="cd" data-u="${x.u||''}"></span><a class="btn" href="#contacto" data-pq="${esc(x.t)}">Quiero esta promoción</a></article>`).join('');
+    const pb=$('#pb');pb.hidden=false;let k=0;
+    const show=()=>{const x=act[k++%act.length];pb.innerHTML=`<a href="#promos"><span>Promoción: ${esc(x.t)}, ${x.pc}% de descuento</span></a>`};show();if(act.length>1)setInterval(show,4000);
+    const tick=()=>document.querySelectorAll('.cd').forEach(e=>{if(!e.dataset.u){e.textContent='Por tiempo limitado';return}let s=Math.max(0,(new Date(e.dataset.u+'T23:59:59')-Date.now())/1000|0);e.textContent='Termina en '+(s/86400|0)+' d '+(s%86400/3600|0)+' h '+(s%3600/60|0)+' min '+s%60+' s'});tick();setInterval(tick,1000);
+    document.querySelectorAll('[data-pq]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();quote('Hola, quiero aprovechar la promoción "'+b.dataset.pq+'".')}));
+  }
+}
+// Catálogo: filtros, configurador de tela y cotización directa
+document.querySelectorAll('#filters button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#filters button').forEach(x=>x.classList.toggle('on',x===b));
+  document.querySelectorAll('#cat .item').forEach(it=>it.classList.toggle('hide',b.dataset.f!=='all'&&!it.dataset.cat.includes(b.dataset.f)));
+}));
+function quote(txt,linea){const f=$('#form');f.msg.value=txt;if(linea)f.linea.value=linea;$('#contacto').scrollIntoView({behavior:'smooth'});setTimeout(()=>f.nombre.focus({preventScroll:true}),700)}
+document.querySelectorAll('.link').forEach(b=>b.addEventListener('click',()=>quote('Hola, quiero cotizar '+b.dataset.q+'.')));
+document.querySelectorAll('#sw button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#sw button').forEach(x=>x.classList.toggle('on',x===b));
+  document.querySelector('.stage').style.setProperty('--f',getComputedStyle(b).getPropertyValue('--c'));
+  $('#swn').textContent=b.dataset.n;
+}));
+$('#quoteSofa').addEventListener('click',()=>quote('Hola, quiero cotizar un sofá en tela '+$('#swn').textContent.toLowerCase()+'.'));
+</script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+# Archivos comprimidos y temporales
+*.zip
+extracted/
+.DS_Store
+Thumbs.db
