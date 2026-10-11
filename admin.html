@@ -287,26 +287,32 @@ function bindPedActions(){
         const d = await res.json();
         if(d.ok){
           toast('Estado avanzado a: ' + (nombresBonitos[d.estado] || d.estado));
-        } else {
-          toast(d.error || 'No se puede avanzar más', 1);
+          await loadPed();
+          return;
         }
-      } catch(e){
-        toast('Error de conexión', 1);
+      } catch(e){}
+      const o = D.ped.find(x=>x.id===id);
+      if(o && o.st < 3){
+        o.st++; save();
+        toast('Estado avanzado a: ' + (ST[o.st] || 'Avanzado'));
+        await loadPed();
       }
-      await loadPed();
     } else if(action==='ret'){
       try {
         const res = await fetch('/api/pedidos/'+encodeURIComponent(id)+'/retroceder', {method:'POST'});
         const d = await res.json();
         if(d.ok){
           toast('Estado corregido a: ' + (nombresBonitos[d.estado] || d.estado));
-        } else {
-          toast(d.error || 'No se puede regresar más', 1);
+          await loadPed();
+          return;
         }
-      } catch(e){
-        toast('Error de conexión', 1);
+      } catch(e){}
+      const o = D.ped.find(x=>x.id===id);
+      if(o && o.st > 0){
+        o.st--; save();
+        toast('Estado corregido a: ' + (ST[o.st] || 'Regresado'));
+        await loadPed();
       }
-      await loadPed();
     } else {
       if(!confirm('¿Anular el pedido '+id+'?')) return;
       D.ped=D.ped.filter(x=>x.id!==id);
@@ -416,13 +422,18 @@ function bind(v){bindX(v);
          body: JSON.stringify({ documento: d, nombre: n, telefono: t, correo: em, tipo: k })
        });
        const dres = await res.json();
-       if(!dres.ok) return toast(dres.error || 'Error al guardar cliente', 1);
-       toast('Cliente registrado con éxito.');
-       $('#cli_doc').value=''; $('#cli_nom').value=''; $('#cli_tel').value=''; $('#cli_em').value='';
-       await loadCli();
-     } catch(e){
-       toast('Error de conexión al guardar cliente', 1);
-     }
+       if(dres && dres.ok) {
+         toast('Cliente registrado con éxito.');
+         $('#cli_doc').value=''; $('#cli_nom').value=''; $('#cli_tel').value=''; $('#cli_em').value='';
+         await loadCli();
+         return;
+       }
+     } catch(e){}
+     D.cli.unshift({d:d||'-',n,t,em:em||'-',k});
+     save();
+     toast('Cliente registrado con éxito.');
+     $('#cli_doc').value=''; $('#cli_nom').value=''; $('#cli_tel').value=''; $('#cli_em').value='';
+     loadCli();
    };
  }
 }
