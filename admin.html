@@ -298,10 +298,45 @@ R.web=()=>`<div class="top"><h1>Catálogo web</h1><a class="btn o" href="index.h
 <div class="box"><h3>Nuevo producto</h3><div class="row"><input id="wn" placeholder="Nombre"><select id="wc"><option value="salas">Salas</option><option value="descanso">Descanso</option><option value="medida">A medida</option></select><input id="wd" placeholder="Descripción"><input id="wp" type="number" min="0" placeholder="Precio desde S/ (opcional)"><input type="file" id="wf" accept="image/*"><button class="btn" id="add">Publicar</button></div></div>
 <input type="file" id="rf" accept="image/*" hidden>
 <div class="box tw"><table><thead><tr><th>Foto</th><th>Producto</th><th>Categoría</th><th>Precio</th><th>Página</th><th>Acciones</th></tr></thead><tbody>${W.prod.map(p=>`<tr><td>${p.img?`<img class="th" src="${p.img}" alt="">`:'<span class="th ph"></span>'}</td><td>${esc(p.n)}</td><td>${cl(p.cat)}</td><td>${p.p?'S/ '+(+p.p).toFixed(2):'-'}</td><td><label><input type="checkbox" data-t="${p.id}" ${p.on?'checked':''}> Visible</label></td><td><button class="btn s o" data-ph="${p.id}">Foto</button> <button class="btn s d" data-rm="${p.id}">Eliminar</button></td></tr>`).join('')}</tbody></table></div>`;
-R.promo=()=>{const hoy=new Date().toISOString().slice(0,10);return `<div class="top"><h1>Promociones</h1><a class="btn o" href="index.html" target="_blank">Ver página pública</a></div>
-<p class="hint">Las promociones activas y vigentes aparecen en la página con cuenta regresiva.</p>
-<div class="box"><h3>Nueva promoción</h3><div class="row"><input id="pt" placeholder="Título"><input id="pd2" placeholder="Descripción"><input id="pp" type="number" min="1" max="90" placeholder="% de descuento"><input id="pu" type="date" title="Vigente hasta"><button class="btn" id="add">Publicar</button></div></div>
-<div class="box tw"><table><thead><tr><th>Promoción</th><th>Descuento</th><th>Hasta</th><th>Estado</th><th>Activa</th><th></th></tr></thead><tbody>${W.promo.map(x=>`<tr><td>${esc(x.t)}</td><td>${x.pc}%</td><td>${x.u||'Sin fecha'}</td><td>${x.u&&x.u<hoy?tag('Vencida','bad'):tag('Vigente')}</td><td><input type="checkbox" data-pa="${x.id}" ${x.on?'checked':''} aria-label="Activa"></td><td><button class="btn s d" data-pr="${x.id}">Eliminar</button></td></tr>`).join('')}</tbody></table></div>`};
+R.promo=()=>{
+  const hoy=new Date().toISOString().slice(0,10);
+  return `<div class="top"><h1>Promociones (MySQL)</h1><a class="btn o" href="index.html" target="_blank">Ver página pública</a></div>
+<p class="hint">Las promociones se guardan en MySQL y se sincronizan en todos los navegadores.</p>
+<div class="box"><h3>Nueva promoción</h3><div class="row"><input id="pt" placeholder="Título"><input id="pd2" placeholder="Descripción"><input id="pp" type="number" min="1" max="90" placeholder="% de descuento"><input id="pu" type="date" title="Vigente hasta"><button class="btn" id="add">Guardar en MySQL</button></div></div>
+<div class="box tw"><table><thead><tr><th>Promoción</th><th>Descuento</th><th>Hasta</th><th>Estado</th><th>Activa</th><th></th></tr></thead><tbody id="tb_promo"></tbody></table></div>`};
+async function loadPromos(){
+  const hoy=new Date().toISOString().slice(0,10);
+  try {
+    const res = await fetch('/api/promociones');
+    const json = await res.json();
+    if(json.ok && json.data) {
+      W.promo = json.data.map(x=>({id:x.id_promocion, t:x.titulo, d:x.descripcion, pc:x.porcentaje_descuento, u:(x.fecha_limite||'').slice(0,10), on:x.activa}));
+      saveW();
+    }
+  } catch(e) {}
+  const tb = $('#tb_promo');
+  if(tb) {
+    tb.innerHTML = W.promo.map(x=>`<tr><td>${esc(x.t)}</td><td>${x.pc}%</td><td>${x.u||'Sin fecha'}</td><td>${x.u&&x.u<hoy?tag('Vencida','bad'):tag('Vigente')}</td><td><input type="checkbox" data-pa="${x.id}" ${x.on?'checked':''} aria-label="Activa"></td><td><button class="btn s d" data-pr="${x.id}">Eliminar</button></td></tr>`).join('');
+    bindPromoButtons();
+  }
+}
+function bindPromoButtons(){
+  document.querySelectorAll('[data-pa]').forEach(c=>c.onchange=async()=>{
+    try {
+      await fetch('/api/promociones/'+c.dataset.pa+'/toggle', {method:'POST'});
+      toast('Estado actualizado en MySQL.');
+    } catch(e) {}
+    loadPromos();
+  });
+  document.querySelectorAll('[data-pr]').forEach(b=>b.onclick=async()=>{
+    if(!confirm('¿Eliminar esta promoción de MySQL?')) return;
+    try {
+      await fetch('/api/promociones/'+b.dataset.pr, {method:'DELETE'});
+      toast('Promoción eliminada de MySQL.');
+    } catch(e) {}
+    loadPromos();
+  });
+}
 function bindX(v){
  if(v==='web'){
   $('#hf').onchange=e=>{const f=e.target.files[0];f&&img2url(f,u=>{W.hero=u;saveW()&&(go('web'),toast('Portada actualizada en la página.'))})};
@@ -313,9 +348,21 @@ function bindX(v){
   document.querySelectorAll('[data-t]').forEach(c=>c.onchange=()=>{W.prod.find(x=>x.id==c.dataset.t).on=c.checked?1:0;saveW();toast(c.checked?'Producto visible.':'Producto oculto.')});
  }
  if(v==='promo'){
-  $('#add').onclick=()=>{const t=$('#pt').value.trim(),d=$('#pd2').value.trim(),pc=+$('#pp').value;if(!t||!d||!(pc>0&&pc<=90))return toast('Completa título, descripción y un descuento entre 1 y 90.',1);W.promo.push({id:Date.now(),t,d,pc,u:$('#pu').value,on:1});saveW();go('promo');toast('Promoción publicada.')};
-  document.querySelectorAll('[data-pa]').forEach(c=>c.onchange=()=>{W.promo.find(x=>x.id==c.dataset.pa).on=c.checked?1:0;saveW();toast(c.checked?'Promoción activada.':'Promoción pausada.')});
-  document.querySelectorAll('[data-pr]').forEach(b=>b.onclick=()=>{W.promo=W.promo.filter(x=>x.id!=b.dataset.pr);saveW();go('promo')});
+  loadPromos();
+  $('#add').onclick=async()=>{
+    const t=$('#pt').value.trim(),d=$('#pd2').value.trim(),pc=+$('#pp').value;
+    if(!t||!d||!(pc>0&&pc<=90))return toast('Completa título, descripción y un descuento entre 1 y 90.',1);
+    const u=$('#pu').value;
+    try {
+      await fetch('/api/promociones', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ titulo: t, descripcion: d, descuento: pc, fecha_limite: u })
+      });
+      toast('Promoción guardada en MySQL.');
+    } catch(e) {}
+    loadPromos();
+  };
  }
 }
 if(S.get('dl_ses'))enter();

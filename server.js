@@ -463,6 +463,58 @@ app.get('/api/resumen', async (req, res) => {
   }
 });
 
+// ==========================================
+// 7. PROMOCIONES (MySQL)
+// ==========================================
+app.get('/api/promociones', async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT id_promocion, titulo, descripcion, porcentaje_descuento, fecha_limite, activa
+       FROM promocion ORDER BY id_promocion DESC`
+    );
+    res.json({ ok: true, data: rows });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+app.post('/api/promociones', async (req, res) => {
+  const { titulo, descripcion, descuento, fecha_limite } = req.body;
+  if (!titulo || !descuento) {
+    return res.status(400).json({ ok: false, error: 'Título y descuento son obligatorios' });
+  }
+  try {
+    const [ins] = await pool.query(
+      `INSERT INTO promocion (titulo, descripcion, porcentaje_descuento, fecha_limite, activa)
+       VALUES (?, ?, ?, ?, 1)`,
+      [titulo.trim(), descripcion || '', Number(descuento), fecha_limite || null]
+    );
+    res.json({ ok: true, mensaje: 'Promoción guardada en MySQL', id_promocion: ins.insertId });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+app.post('/api/promociones/:id/toggle', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query('UPDATE promocion SET activa = IF(activa = 1, 0, 1) WHERE id_promocion = ?', [id]);
+    res.json({ ok: true, mensaje: 'Estado actualizado' });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+app.delete('/api/promociones/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query('DELETE FROM promocion WHERE id_promocion = ?', [id]);
+    res.json({ ok: true, mensaje: 'Promoción eliminada de MySQL' });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
 // Servir la página pública
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));

@@ -386,15 +386,32 @@ if(site){
     const sy=n=>/sill/i.test(n)?'chair':/cama/i.test(n)?'bed':/colch/i.test(n)?'matt':/cabec/i.test(n)?'head':/medida|personal/i.test(n)?'cust':'sofa';
     $('#cat').innerHTML=site.prod.filter(p=>p.on).map(p=>`<article class="item" data-cat="${esc(p.cat)}"><div class="fig">${p.img?`<img src="${p.img}" alt="${esc(p.n)}" loading="lazy">`:`<svg viewBox="0 0 200 130"><use href="#${sy(p.n)}"/></svg>`}</div><h3>${esc(p.n)}</h3><p>${esc(p.d)}</p>${p.p?`<p class="pr-p">Desde S/ ${(+p.p).toFixed(2)}</p>`:''}<button class="link" data-q="${esc(p.n.toLowerCase())}">Cotizar</button></article>`).join('');
   }
-  const act=(site.promo||[]).filter(x=>x.on&&(!x.u||new Date(x.u+'T23:59:59')>Date.now()));
-  if(act.length){
-    $('#promos').hidden=false;$('#npromo').hidden=false;
-    $('#pg').innerHTML=act.map(x=>`<article class="pr"><b class="pc">-${x.pc}%</b><h3>${esc(x.t)}</h3><p>${esc(x.d)}</p><span class="cd" data-u="${x.u||''}"></span><a class="btn" href="#contacto" data-pq="${esc(x.t)}">Quiero esta promoción</a></article>`).join('');
-    const pb=$('#pb');pb.hidden=false;let k=0;
-    const show=()=>{const x=act[k++%act.length];pb.innerHTML=`<a href="#promos"><span>Promoción: ${esc(x.t)}, ${x.pc}% de descuento</span></a>`};show();if(act.length>1)setInterval(show,4000);
-    const tick=()=>document.querySelectorAll('.cd').forEach(e=>{if(!e.dataset.u){e.textContent='Por tiempo limitado';return}let s=Math.max(0,(new Date(e.dataset.u+'T23:59:59')-Date.now())/1000|0);e.textContent='Termina en '+(s/86400|0)+' d '+(s%86400/3600|0)+' h '+(s%3600/60|0)+' min '+s%60+' s'});tick();setInterval(tick,1000);
-    document.querySelectorAll('[data-pq]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();quote('Hola, quiero aprovechar la promoción "'+b.dataset.pq+'".')}));
+  function renderPromos(promos){
+    const act=(promos||[]).filter(x=>x.on&&(!x.u||new Date(x.u+'T23:59:59')>Date.now()));
+    if(act.length){
+      $('#promos').hidden=false;$('#npromo').hidden=false;
+      $('#pg').innerHTML=act.map(x=>`<article class="pr"><b class="pc">-${x.pc}%</b><h3>${esc(x.t)}</h3><p>${esc(x.d)}</p><span class="cd" data-u="${x.u||''}"></span><a class="btn" href="#contacto" data-pq="${esc(x.t)}">Quiero esta promoción</a></article>`).join('');
+      const pb=$('#pb');pb.hidden=false;let k=0;
+      const show=()=>{const x=act[k++%act.length];pb.innerHTML=`<a href="#promos"><span>Promoción: ${esc(x.t)}, ${x.pc}% de descuento</span></a>`};show();if(act.length>1)setInterval(show,4000);
+      const tick=()=>document.querySelectorAll('.cd').forEach(e=>{if(!e.dataset.u){e.textContent='Por tiempo limitado';return}let s=Math.max(0,(new Date(e.dataset.u+'T23:59:59')-Date.now())/1000|0);e.textContent='Termina en '+(s/86400|0)+' d '+(s%86400/3600|0)+' h '+(s%3600/60|0)+' min '+s%60+' s'});tick();setInterval(tick,1000);
+      document.querySelectorAll('[data-pq]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();quote('Hola, quiero aprovechar la promoción "'+b.dataset.pq+'".')}));
+    } else {
+      $('#promos').hidden=true;$('#npromo').hidden=true;
+    }
   }
+  // Cargar promociones reales desde MySQL
+  fetch('/api/promociones')
+    .then(r=>r.json())
+    .then(json=>{
+      if(json.ok && json.data) {
+        renderPromos(json.data.map(x=>({t:x.titulo, d:x.descripcion, pc:x.porcentaje_descuento, u:(x.fecha_limite||'').slice(0,10), on:x.activa})));
+      } else if(site && site.promo) {
+        renderPromos(site.promo);
+      }
+    })
+    .catch(()=>{
+      if(site && site.promo) renderPromos(site.promo);
+    });
 }
 // Catálogo: filtros, configurador de tela y cotización directa
 document.querySelectorAll('#filters button').forEach(b=>b.addEventListener('click',()=>{
